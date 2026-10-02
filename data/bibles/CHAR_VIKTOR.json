@@ -1,0 +1,12 @@
+{
+  "character_id": "CHAR_VIKTOR",
+  "canonical_name": "Viktor Kazan",
+  "age_range": "late 30s, approximately 38 years old",
+  "ethnicity": "Eastern European Caucasian male",
+  "facial_features": "strong square jaw, deep-set dark brown eyes, prominent cheekbones, weathered skin with fine lines, thin scar along left jawline, straight Roman nose, neutral thin lips",
+  "hair_specification": "short dark brown hair, closely cropped on sides, slight natural wave on top, no facial hair",
+  "body_morphology": "tall athletic build, 6 foot 1 inch, broad shoulders, lean muscular frame, controlled upright posture",
+  "canonical_negative_prompt": "beard, mustache, facial hair, stubble, eyeglasses, blonde hair, long hair, blue eyes, makeup, earrings, casual wear, modern streetwear, feminine features, overweight, short stature",
+  "default_lora_trigger": null,
+  "face_embedding_path": "data/embeddings/CHAR_VIKTOR_face.npy"
+}

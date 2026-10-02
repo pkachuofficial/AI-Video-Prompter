@@ -1,0 +1,12 @@
+{
+  "wardrobe_id": "WARDROBE_VIKTOR_TACTICAL_01",
+  "character_id": "CHAR_VIKTOR",
+  "garment_layers": "black fitted tactical turtleneck, dark charcoal slim-cut tactical trousers with cargo pockets, matte black leather combat boots with steel toe",
+  "distress_level": "battle-worn",
+  "accessories": [
+    "matte black tactical watch on left wrist",
+    "slim concealed holster under left arm",
+    "thin silver ring on right index finger"
+  ],
+  "ip_adapter_reference_path": "data/wardrobes/WARDROBE_VIKTOR_TACTICAL_01_ref.jpg"
+}

@@ -1,0 +1,35 @@
+{
+  "episode_id": "S01E01",
+  "shots": [
+    {
+      "shot_id": "S01E01_SCN007_SH001",
+      "scene_id": "S01E01_SCN_007",
+      "primary_character_id": "CHAR_VIKTOR",
+      "wardrobe_id": "WARDROBE_VIKTOR_TACTICAL_01",
+      "shot_type": "WS",
+      "camera_movement": "Static",
+      "focal_length": "28mm",
+      "action_beat": "Viktor enters the safe-house through a heavy metal door, pausing to survey the room with controlled vigilance"
+    },
+    {
+      "shot_id": "S01E01_SCN007_SH002",
+      "scene_id": "S01E01_SCN_007",
+      "primary_character_id": "CHAR_VIKTOR",
+      "wardrobe_id": "WARDROBE_VIKTOR_TACTICAL_01",
+      "shot_type": "MCU",
+      "camera_movement": "Push-in",
+      "focal_length": "85mm",
+      "action_beat": "Viktor stares intently at the tactical map, jaw tightening as he processes the intelligence"
+    },
+    {
+      "shot_id": "S01E01_SCN007_SH003",
+      "scene_id": "S01E01_SCN_007",
+      "primary_character_id": "CHAR_VIKTOR",
+      "wardrobe_id": "WARDROBE_VIKTOR_TACTICAL_01",
+      "shot_type": "ECU",
+      "camera_movement": "Static",
+      "focal_length": "105mm",
+      "action_beat": "Viktor's eyes narrow as recognition crosses his face"
+    }
+  ]
+}
