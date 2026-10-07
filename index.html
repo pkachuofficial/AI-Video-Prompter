@@ -320,16 +320,16 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
       <span class="tag ok" style="font-size:10px">Multimodal Vision Ground Truth</span>
     </div>
     <div class="fg">
-      <label style="color:var(--tx2)">Upload your <strong>actual generated video (.mp4, .webm)</strong> or <strong>last generated frame (.png, .jpg, .webp)</strong>. Gemini Vision directly inspects what was <em>actually rendered</em> (scars, hair parting, wardrobe colors, prop positions) vs intended, eliminating compounding drift.</label>
+      <label style="color:var(--tx2)">Upload your <strong>actual generated video (.mp4, .webm, .mov)</strong> or <strong>last generated frame (.png, .jpg, .webp)</strong>. Gemini Vision directly inspects what was <em>actually rendered</em> (scars, hair parting, wardrobe colors, prop positions) vs intended, eliminating compounding drift.</label>
       
       <div id="dropzone-observed" onclick="document.getElementById('file-observed').click()" 
            ondragover="handleObservedDragOver(event)" ondragleave="handleObservedDragLeave(event)" ondrop="handleObservedDrop(event)"
            style="border:2px dashed var(--bd2);border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;background:var(--bginp);transition:.2s">
-        <input type="file" id="file-observed" accept="image/*,video/mp4,video/webm" style="display:none" onchange="handleObservedFile(event)">
+        <input type="file" id="file-observed" accept="image/*,video/mp4,video/webm,video/quicktime,.mov,.mp4,.webm,.m4v" style="display:none" onchange="handleObservedFile(event)">
         <div id="dropzone-observed-prompt">
           <div style="font-size:24px;margin-bottom:6px">📁 📸 🎞️</div>
           <div style="font-weight:600;color:var(--tx1);font-size:13px">Drop Generated Video or Frame here, or <span style="color:var(--ai);text-decoration:underline">browse</span></div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:4px">Supports MP4, WebM (auto-extracts final frame) or PNG, JPG, WebP images</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:4px">Supports MP4, WebM, MOV / QuickTime (auto-extracts final frame) or PNG, JPG, WebP images</div>
         </div>
         <div id="dropzone-observed-preview" style="display:none;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap">
           <img id="observed-preview-img" src="" style="max-height:110px;border-radius:6px;border:1px solid var(--bd2);object-fit:cover" alt="Observed Frame Preview">
@@ -1511,10 +1511,13 @@ function handleObservedFile(e){
 }
 function processObservedFile(file){
   if(!file) return;
-  const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov)$/i.test(file.name);
-  const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(file.name);
+  const isVideo = (file.type && file.type.startsWith('video/')) || 
+                  file.type === 'video/quicktime' || 
+                  /\.(mp4|webm|mov|m4v|qt)$/i.test(file.name);
+  const isImage = (file.type && file.type.startsWith('image/')) || 
+                  /\.(png|jpe?g|webp|gif|bmp)$/i.test(file.name);
   if(!isVideo && !isImage){
-    alert('Please upload an image (.png, .jpg, .webp) or video (.mp4, .webm).');
+    alert('Please upload an image (.png, .jpg, .webp) or video (.mp4, .webm, .mov).');
     return;
   }
 
@@ -1542,8 +1545,9 @@ function processObservedFile(file){
     };
     reader.readAsDataURL(file);
   } else if(isVideo){
+    const isMov = /\.(mov|qt)$/i.test(file.name) || file.type === 'video/quicktime';
     if(nameEl) nameEl.textContent = '🎞️ Extracting final frame from ' + file.name + '...';
-    if(detEl) detEl.textContent = 'Extracting canvas frame via browser...';
+    if(detEl) detEl.textContent = isMov ? 'Decoding QuickTime MOV frame via browser canvas...' : 'Extracting canvas frame via browser...';
     if(promptEl) promptEl.style.display = 'none';
     if(prevEl) prevEl.style.display = 'flex';
 
@@ -1554,11 +1558,21 @@ function processObservedFile(file){
     const url = URL.createObjectURL(file);
     video.src = url;
 
+    let seekTimeout = setTimeout(() => {
+      if(!window._observedFrame && detEl){
+        detEl.textContent = 'Large video detected. Still processing frame...';
+      }
+    }, 4000);
+
     video.onloadedmetadata = function(){
-      const targetTime = Math.max(0, video.duration - 0.15);
+      let targetTime = 0;
+      if(Number.isFinite(video.duration) && video.duration > 0){
+        targetTime = Math.max(0, video.duration - 0.15);
+      }
       video.currentTime = targetTime;
     };
     video.onseeked = function(){
+      clearTimeout(seekTimeout);
       try {
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth || 640;
@@ -1574,15 +1588,17 @@ function processObservedFile(file){
         };
         if(imgEl) imgEl.src = dataUrl;
         if(nameEl) nameEl.textContent = '🎞️ ' + file.name;
-        if(detEl) detEl.textContent = `Video Final Frame Extracted (${canvas.width}x${canvas.height}) · Ready for Gemini Vision Inspection`;
+        if(detEl) detEl.textContent = `${isMov ? 'QuickTime (.MOV)' : 'Video'} Frame Extracted (${canvas.width}x${canvas.height}) · Ready for Gemini Vision Inspection`;
         URL.revokeObjectURL(url);
       } catch(err){
         alert('Could not extract frame from video: ' + err.message);
         clearObservedFrame();
+        URL.revokeObjectURL(url);
       }
     };
     video.onerror = function(){
-      alert('Error loading video file.');
+      clearTimeout(seekTimeout);
+      alert('Your browser could not decode this video (' + file.name + '). Note: Some specialized QuickTime codecs (e.g. ProRes / uncompressed MOV) require browser-supported H.264 codecs. Tip: If this happens, upload the last frame as PNG/JPG or convert to H.264 MP4.');
       clearObservedFrame();
       URL.revokeObjectURL(url);
     };
