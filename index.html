@@ -521,7 +521,7 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
     <div class="fg">
       <label>Model</label>
       <select id="s-model" onchange="saveSettings()">
-        <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite ✦ (Ultra-Fast)</option>
+        <option value="gemini-3.1-flash-lite" selected>Gemini 3.1 Flash Lite ✦ (Ultra-Fast — Active Model)</option>
         <option value="gemini-2.5-flash">Gemini 2.5 Flash 🧠 (Deep Thinking & Reasoning)</option>
         <option value="gemini-2.5-pro">Gemini 2.5 Pro 🔬 (Maximum Deep Reasoning)</option>
         <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
@@ -644,7 +644,7 @@ function showPage(n){
 function getApiKey(){return db().settings.apiKey||'';}
 function getModel(){
   let m = db().settings?.model;
-  if(!m || m.includes('gemini-2.0') || m === 'gemini-1.5-flash-8b'){
+  if(!m || m.includes('gemini-2.0') || m === 'gemini-1.5-flash-8b' || !m.startsWith('gemini-3.1')){
     m = 'gemini-3.1-flash-lite';
     const d = db();
     if(!d.settings) d.settings = {};
@@ -740,7 +740,8 @@ function sanitizeDramagicPrompt(text){
 }
 
 async function callGeminiApi(model, apiKey, prompt, systemText = '', threshold = 'BLOCK_NONE', temperature = 0.35, imagePart = null){
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const activeModel = model || 'gemini-3.1-flash-lite';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${apiKey}`;
   const userParts = [];
   if(imagePart && imagePart.data && imagePart.mimeType){
     userParts.push({
