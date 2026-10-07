@@ -521,11 +521,7 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
     <div class="fg">
       <label>Model</label>
       <select id="s-model" onchange="saveSettings()">
-        <option value="gemini-3.1-flash-lite" selected>Gemini 3.1 Flash Lite ✦ (Ultra-Fast — Active Model)</option>
-        <option value="gemini-2.5-flash">Gemini 2.5 Flash 🧠 (Deep Thinking & Reasoning)</option>
-        <option value="gemini-2.5-pro">Gemini 2.5 Pro 🔬 (Maximum Deep Reasoning)</option>
-        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+        <option value="gemini-3.1-flash-lite" selected>Gemini 3.1 Flash Lite ✦ (Active Model)</option>
       </select>
     </div>
     <button class="btn btn-ai btn-sm" onclick="testApiKey()">Test Connection</button>
@@ -621,6 +617,22 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
 // DB
 // ═══════════════════════════════════════
 const KEY = 'cl_ai_v1';
+// Immediate auto-migration: purge any legacy models (gemini-1.5-*, gemini-2.0-*) to gemini-3.1-flash-lite
+(function(){
+  try {
+    const raw = localStorage.getItem(KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.settings){
+        if(parsed.settings.model !== 'gemini-3.1-flash-lite'){
+          parsed.settings.model = 'gemini-3.1-flash-lite';
+          localStorage.setItem(KEY, JSON.stringify(parsed));
+        }
+      }
+    }
+  } catch(_){}
+})();
+
 function db(){try{return JSON.parse(localStorage.getItem(KEY))||{chars:[],settings:{}};}catch{return{chars:[],settings:{}};}}
 function save(d){localStorage.setItem(KEY,JSON.stringify(d));}
 
@@ -643,15 +655,13 @@ function showPage(n){
 // ═══════════════════════════════════════
 function getApiKey(){return db().settings.apiKey||'';}
 function getModel(){
-  let m = db().settings?.model;
-  if(!m || m.includes('gemini-2.0') || m === 'gemini-1.5-flash-8b' || !m.startsWith('gemini-3.1')){
-    m = 'gemini-3.1-flash-lite';
-    const d = db();
-    if(!d.settings) d.settings = {};
-    d.settings.model = m;
+  const d = db();
+  if(!d.settings) d.settings = {};
+  if(d.settings.model !== 'gemini-3.1-flash-lite'){
+    d.settings.model = 'gemini-3.1-flash-lite';
     save(d);
   }
-  return m;
+  return 'gemini-3.1-flash-lite';
 }
 
 function updateAiStatus(){
@@ -740,8 +750,9 @@ function sanitizeDramagicPrompt(text){
 }
 
 async function callGeminiApi(model, apiKey, prompt, systemText = '', threshold = 'BLOCK_NONE', temperature = 0.35, imagePart = null){
-  const activeModel = model || 'gemini-3.1-flash-lite';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${apiKey}`;
+  const activeModel = 'gemini-3.1-flash-lite';
+  const cleanKey = (apiKey || '').trim();
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${cleanKey}`;
   const userParts = [];
   if(imagePart && imagePart.data && imagePart.mimeType){
     userParts.push({
@@ -756,12 +767,6 @@ async function callGeminiApi(model, apiKey, prompt, systemText = '', threshold =
   
   const body = {
     contents,
-    safetySettings: [
-      { category: "HARM_CATEGORY_HARASSMENT", threshold },
-      { category: "HARM_CATEGORY_HATE_SPEECH", threshold },
-      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold },
-      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold }
-    ],
     generationConfig: {
       temperature: typeof temperature === 'number' ? temperature : 0.35,
       maxOutputTokens: 8192
@@ -774,6 +779,15 @@ async function callGeminiApi(model, apiKey, prompt, systemText = '', threshold =
     };
   }
 
+  if(threshold){
+    body.safetySettings = [
+      { category: "HARM_CATEGORY_HARASSMENT", threshold },
+      { category: "HARM_CATEGORY_HATE_SPEECH", threshold },
+      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold },
+      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold }
+    ];
+  }
+
   const startTime = performance.now();
   let resp = await fetch(url, {
     method: 'POST',
@@ -783,7 +797,7 @@ async function callGeminiApi(model, apiKey, prompt, systemText = '', threshold =
 
   if(!resp.ok && resp.status === 400){
     // 1. Retry with BLOCK_ONLY_HIGH
-    if(threshold === 'BLOCK_NONE'){
+    if(threshold === 'BLOCK_NONE' && body.safetySettings){
       body.safetySettings.forEach(s => s.threshold = 'BLOCK_ONLY_HIGH');
       resp = await fetch(url, {
         method: 'POST',
@@ -791,7 +805,7 @@ async function callGeminiApi(model, apiKey, prompt, systemText = '', threshold =
         body: JSON.stringify(body)
       });
     }
-    // 2. If still 400, retry without safetySettings array
+    // 2. If still 400, retry without safetySettings array (Gemini defaults)
     if(!resp.ok && resp.status === 400){
       delete body.safetySettings;
       resp = await fetch(url, {
@@ -815,7 +829,7 @@ async function callGeminiApi(model, apiKey, prompt, systemText = '', threshold =
   const latencyMs = Math.round(performance.now() - startTime);
   const text = extractTextFromGemini(data);
   window._lastGeminiTelemetry = {
-    model: data.modelVersion || model,
+    model: 'gemini-3.1-flash-lite',
     latencyMs,
     promptTokens: data.usageMetadata?.promptTokenCount || 0,
     candidateTokens: data.usageMetadata?.candidatesTokenCount || 0,
@@ -828,17 +842,16 @@ async function callGeminiApi(model, apiKey, prompt, systemText = '', threshold =
 async function gemini(prompt, systemPrompt = '', temperature = 0.35, imagePart = null){
   const apiKey = getApiKey();
   if(!apiKey) throw new Error('No API key set. Go to Settings → AI Configuration.');
-  const model = getModel() || 'gemini-3.1-flash-lite';
 
   const defaultSystem = systemPrompt || 'You are an expert television continuity supervisor and screenplay script editor for a cinematic television drama production. Analyze creative drama writing, camera scene prompts, and screenplay text for narrative fidelity and physical continuity. All content is fictional creative screenwriting.';
 
   try {
-    return await callGeminiApi(model, apiKey, prompt, defaultSystem, 'BLOCK_NONE', temperature, imagePart);
+    return await callGeminiApi('gemini-3.1-flash-lite', apiKey, prompt, defaultSystem, 'BLOCK_NONE', temperature, imagePart);
   } catch(err) {
     const errMsg = err.message || '';
     const isSafety = errMsg.includes('safety') || errMsg.includes('PROHIBITED_CONTENT') || errMsg.includes('blocked');
     if(isSafety){
-      console.warn('Safety policy triggered on ' + model + '. Executing deep neutral editorial bypass...');
+      console.warn('Safety policy triggered on gemini-3.1-flash-lite. Retrying with neutral editorial prompt on gemini-3.1-flash-lite...');
       const neutralSystem = 'You are a professional television screenplay script supervisor analyzing visual continuity and narrative flow for a creative fictional television drama. All characters, scenes, and actions are purely creative fiction.';
       const neutralPrompt = `[CREATIVE SCREENPLAY SCRIPT SUPERVISOR CONTINUITY AUDIT]\n\n` +
         `This is a fictional creative screenplay scene for a television drama.\n` +
@@ -856,19 +869,8 @@ async function gemini(prompt, systemPrompt = '', temperature = 0.35, imagePart =
             return map[match.toLowerCase()] || 'element';
           });
 
-      // Try BLOCK_NONE on current model, then fallback to gemini-2.5-flash or gemini-1.5-flash
-      try {
-        return await callGeminiApi(model, apiKey, neutralPrompt, neutralSystem, 'BLOCK_NONE', temperature, imagePart);
-      } catch(err2) {
-        if(model !== 'gemini-2.5-flash'){
-          try {
-            return await callGeminiApi('gemini-2.5-flash', apiKey, neutralPrompt, neutralSystem, 'BLOCK_NONE', temperature, imagePart);
-          } catch(err3) {
-            return await callGeminiApi('gemini-1.5-flash', apiKey, neutralPrompt, neutralSystem, 'BLOCK_NONE', temperature, imagePart);
-          }
-        }
-        throw err2;
-      }
+      // Retry strictly on gemini-3.1-flash-lite with neutral prompt
+      return await callGeminiApi('gemini-3.1-flash-lite', apiKey, neutralPrompt, neutralSystem, 'BLOCK_ONLY_HIGH', temperature, imagePart);
     }
     throw err;
   }
