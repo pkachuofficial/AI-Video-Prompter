@@ -196,6 +196,15 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
 .report-table th{background:var(--bg4);color:var(--acc);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px}
 .report-table tr:nth-child(even){background:rgba(255,255,255,0.02)}
 .report-table td strong{color:var(--tx1)}
+/* ── CONTINUITY ENGINE SUMMARY & FINAL PROMPT ── */
+.continuity-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:14px}
+.summary-card{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:12px 14px}
+.summary-card.c-ok{border-left:3px solid var(--ok)}
+.summary-card.c-warn{border-left:3px solid var(--warn)}
+.summary-card.c-ai{border-left:3px solid var(--ai)}
+.summary-card .sc-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.final-prompt-card{background:linear-gradient(135deg,var(--bg3) 0%,#151322 100%);border:1px solid var(--aiborder);border-left:4px solid var(--acc);border-radius:10px;padding:16px 18px;margin-bottom:14px}
+.final-prompt-box{font-size:12px;line-height:1.8;color:var(--tx1);white-space:pre-wrap;font-family:'Menlo','Monaco',monospace;max-height:420px;overflow-y:auto;background:var(--bginp);border:1px solid var(--bd2);border-radius:7px;padding:12px 14px;margin-top:10px}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
 </style>
 </head>
@@ -224,7 +233,7 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
   <div class="sgroup">
     <div class="sgLabel">AI Features</div>
     <div class="ni ai-tab" onclick="showPage('biblerx')"><span class="ic">🤖</span> Auto Bible Builder <span class="badge">AI</span></div>
-    <div class="ni ai-tab" onclick="showPage('drift')"><span class="ic">🔍</span> Drift Detector <span class="badge">AI</span></div>
+    <div class="ni ai-tab" onclick="showPage('drift')"><span class="ic">⚡</span> Continuity Engine <span class="badge">AI</span></div>
     <div class="ni ai-tab" onclick="showPage('planner')"><span class="ic">📝</span> Shot Planner <span class="badge">AI</span></div>
     <div class="ni ai-tab" onclick="showPage('chat')"><span class="ic">💬</span> Continuity Chat <span class="badge">AI</span></div>
   </div>
@@ -295,10 +304,10 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
   <div id="biblerx-results" style="display:none"></div>
 </div>
 
-<!-- ══ PAGE: DRIFT DETECTOR (AI) ══ -->
+<!-- ══ PAGE: CONTINUITY & HUMAN-REALISM ENGINE (AI) ══ -->
 <div id="page-drift" class="page">
-  <div class="ptitle">🔍 Sequential Shot Flow & Continuity State Auditor</div>
-  <div class="pdesc">Transform continuity from prompt comparison into physical state-tracking & constraint validation. Upload previous generated video/frame for multimodal ground truth (intended vs observed state), lock room geometry to spatial anchor graphs, prevent mirror flips, and audit human kinematics.</div>
+  <div class="ptitle">⚡ Cinematic Continuity & Human-Realism Engine</div>
+  <div class="pdesc">Prompt-centric continuity bridge: analyze the previous shot state against the new shot prompt, detect physical/spatial/wardrobe contradictions, enforce human motion & emotional realism, and generate ONE clean, optimized production prompt.</div>
 
   <div id="drift-ai-warn" class="status warn" style="display:none">⚠ No Gemini API key set. Go to Settings → AI Configuration.</div>
 
@@ -417,7 +426,7 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
   </div>
 
   <div class="fc g10" style="margin-bottom:18px">
-    <button class="btn btn-ai" onclick="runDriftDetect()">🔍 Audit Next Scene (State Tracking & Constraint Validation)</button>
+    <button class="btn btn-ai" onclick="runDriftDetect()">⚡ Analyze Continuity & Optimize Prompt</button>
     <button class="btn btn-s btn-sm" onclick="document.getElementById('drift-s3-card').style.display='block'">+ Add Shot 3</button>
     <span id="drift-msg" class="dim"></span>
   </div>
@@ -1698,51 +1707,172 @@ function formatDriftReportMarkdown(text){
   return out.join('\n');
 }
 
+function parseContinuityResponse(raw){
+  if(!raw) return { mode: 'CONTINUE', continuity: '', risks: '', corrections: '', finalPrompt: '', details: '' };
+
+  let mode = 'CONTINUE';
+  const modeMatch = raw.match(/(?:Mode|CONTINUITY MODE):\s*(CONTINUE|TRANSITION|RESET)/i) ||
+                    raw.match(/\b(CONTINUE|TRANSITION|RESET)\b/i);
+  if(modeMatch) mode = modeMatch[1].toUpperCase();
+
+  const cMatch = raw.match(/(?:###\s*(?:🎯\s*)?CONTINUITY(?: & INHERITANCE)?|CONTINUITY:)([\s\S]*?)(?=(?:###\s*(?:⚠️\s*)?RISKS|RISKS:|###\s*(?:🛠️\s*)?CORRECTIONS|CORRECTIONS:|###\s*(?:✨\s*)?FINAL|FINAL OPTIMIZED|$))/i);
+  const rMatch = raw.match(/(?:###\s*(?:⚠️\s*)?RISKS(?: FLAGGED)?|RISKS:)([\s\S]*?)(?=(?:###\s*(?:🛠️\s*)?CORRECTIONS|CORRECTIONS:|###\s*(?:✨\s*)?FINAL|FINAL OPTIMIZED|$))/i);
+  const corrMatch = raw.match(/(?:###\s*(?:🛠️\s*)?CORRECTIONS(?: APPLIED)?|CORRECTIONS:)([\s\S]*?)(?=(?:###\s*(?:✨\s*)?FINAL|FINAL OPTIMIZED|###\s*(?:🔬\s*)?DETAILED|$))/i);
+  const fpMatch = raw.match(/(?:###\s*(?:✨\s*)?FINAL (?:OPTIMIZED )?(?:GENERATION )?PROMPT|FINAL PROMPT:|FINAL OPTIMIZED SHOT PROMPT:)([\s\S]*?)(?=(?:###\s*(?:🔬\s*)?DETAILED|DETAILED TECHNICAL ANALYSIS:|$))/i);
+  const dtMatch = raw.match(/(?:###\s*(?:🔬\s*)?DETAILED(?: TECHNICAL)? ANALYSIS|DETAILED TECHNICAL ANALYSIS:)([\s\S]*)/i);
+
+  let finalPrompt = fpMatch ? fpMatch[1].trim() : '';
+  finalPrompt = finalPrompt.replace(/^```[a-z]*\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+
+  if(!finalPrompt && raw.includes('```')){
+    const bMatch = raw.match(/```(?:prompt)?\s*\n([\s\S]*?)```/i);
+    if(bMatch) finalPrompt = bMatch[1].trim();
+  }
+
+  return {
+    mode,
+    continuity: cMatch ? cMatch[1].trim() : '',
+    risks: rMatch ? rMatch[1].trim() : '',
+    corrections: corrMatch ? corrMatch[1].trim() : '',
+    finalPrompt,
+    details: dtMatch ? dtMatch[1].trim() : (raw.length > 300 ? raw : '')
+  };
+}
+
+function formatCardBullets(text, defaultIcon, defaultColor){
+  if(!text) return '<div class="dim" style="font-size:12px;padding:4px 0">None reported</div>';
+  const lines = text.split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0 && !l.toLowerCase().startsWith('mode:'));
+  if(!lines.length) return '<div class="dim" style="font-size:12px;padding:4px 0">None reported</div>';
+
+  return lines.map(line => {
+    let clean = line.replace(/^[-*•]\s*/, '').trim();
+    let icon = defaultIcon;
+    let color = defaultColor;
+    if(clean.startsWith('✓')){ icon = '✓'; color = 'var(--ok)'; clean = clean.substring(1).trim(); }
+    else if(clean.startsWith('↻')){ icon = '↻'; color = 'var(--ai)'; clean = clean.substring(1).trim(); }
+    else if(clean.startsWith('→')){ icon = '→'; color = 'var(--acc)'; clean = clean.substring(1).trim(); }
+    else if(clean.startsWith('⚠')){ icon = '⚠'; color = 'var(--warn)'; clean = clean.substring(1).trim(); }
+    else if(clean.startsWith('❌') || clean.startsWith('✗')){ icon = '✗'; color = 'var(--err)'; clean = clean.substring(1).trim(); }
+    return `<div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:7px;font-size:12px;line-height:1.55">
+      <span style="color:${color};font-weight:700;flex-shrink:0;margin-top:1px">${icon}</span>
+      <span style="color:var(--tx1)">${escH(clean)}</span>
+    </div>`;
+  }).join('');
+}
+
 function renderDriftReportSuccess(response){
   window._lastDriftReport = response;
   const telem = window._lastGeminiTelemetry || {};
   const latSec = telem.latencyMs ? (telem.latencyMs / 1000).toFixed(2) + 's' : 'verified';
   const hasVision = !!(window._observedFrame && window._observedFrame.data);
-  
-  document.getElementById('drift-results').style.display = 'block';
-  document.getElementById('drift-results').innerHTML = `
+  const parsed = parseContinuityResponse(response);
+  window._lastFinalPrompt = parsed.finalPrompt || response;
+
+  let modeBadge = `<span class="tag ok" style="font-size:11px;font-weight:700">CONTINUE</span>`;
+  if(parsed.mode === 'TRANSITION') {
+    modeBadge = `<span class="tag ai" style="font-size:11px;font-weight:700">TRANSITION</span>`;
+  } else if(parsed.mode === 'RESET') {
+    modeBadge = `<span class="tag warn" style="font-size:11px;font-weight:700">RESET</span>`;
+  }
+
+  const resultsEl = document.getElementById('drift-results');
+  resultsEl.style.display = 'block';
+
+  resultsEl.innerHTML = `
+    <!-- TELEMETRY & VERIFICATION BAR -->
     <div style="background:rgba(16,185,129,0.08);border:1px solid #10b981;border-radius:8px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-      <div class="fc g8" style="align-items:center">
+      <div class="fc g10" style="align-items:center">
         <span style="font-size:18px">🟢</span>
         <div>
-          <div style="font-weight:700;color:var(--ok);font-size:13px">Live Google Gemini Cloud Response Verified ${hasVision ? '· 🖼️ Multimodal Vision Active' : ''}</div>
-          <div style="font-size:11px;color:var(--tx2)">100% computed live via Google Gemini Cloud API · Zero local canned templates</div>
+          <div style="font-weight:700;color:var(--ok);font-size:13px;display:flex;align-items:center;gap:8px">
+            <span>Live Continuity Engine Verified ${hasVision ? '· 🖼️ Multimodal Vision Active' : ''}</span>
+            ${modeBadge}
+          </div>
+          <div style="font-size:11px;color:var(--tx2)">Prompt-Centric Cinematic Continuity & Realism Engine · Authority: New Shot Prompt</div>
         </div>
       </div>
-      <div style="font-size:11px;font-family:monospace;background:var(--bg2);padding:5px 10px;border-radius:5px;border:1px solid var(--border);color:var(--tx1)">
+      <div style="font-size:11px;font-family:monospace;background:var(--bg2);padding:5px 10px;border-radius:5px;border:1px solid var(--bd2);color:var(--tx1)">
         Model: <strong style="color:var(--ai)">${telem.model || 'gemini-3.1-flash-lite'}</strong> &nbsp;|&nbsp; 
         Latency: <strong>${latSec}</strong> &nbsp;|&nbsp; 
-        Tokens: <strong>${telem.totalTokens || '—'}</strong> (${telem.promptTokens || 0} in / ${telem.candidateTokens || 0} out) &nbsp;|&nbsp; 
+        Tokens: <strong>${telem.totalTokens || '—'}</strong> &nbsp;|&nbsp; 
         ${telem.timestamp || new Date().toLocaleTimeString()}
       </div>
     </div>
 
-    <div class="card ai-card">
-      <div class="fb" style="margin-bottom:8px">
-        <div class="ctitle ai-ctitle" style="margin-bottom:0">Sequential State Matrix & Constraint Audit</div>
-        <div class="fc g8">
-          <button class="btn btn-s btn-xs" onclick="copyDriftReport(this)">📋 Copy Full Audit</button>
+    <!-- 3-CARD CONCISE SUMMARY (SECTION 42 SPECIFICATION) -->
+    <div class="continuity-summary-grid">
+      <div class="summary-card c-ok">
+        <div class="sc-title" style="color:var(--ok)">
+          <span>🎯 CONTINUITY & INHERITANCE</span>
+        </div>
+        <div style="font-size:12px">
+          ${formatCardBullets(parsed.continuity, '✓', 'var(--ok)')}
         </div>
       </div>
-      <div id="drift-report-body" style="font-size:13px;line-height:1.8;white-space:pre-wrap;color:var(--tx1)"></div>
+
+      <div class="summary-card c-warn">
+        <div class="sc-title" style="color:var(--warn)">
+          <span>⚠️ RISKS FLAGGED</span>
+        </div>
+        <div style="font-size:12px">
+          ${formatCardBullets(parsed.risks, '⚠', 'var(--warn)')}
+        </div>
+      </div>
+
+      <div class="summary-card c-ai">
+        <div class="sc-title" style="color:var(--ai)">
+          <span>🛠️ CORRECTIONS APPLIED</span>
+        </div>
+        <div style="font-size:12px">
+          ${formatCardBullets(parsed.corrections, '✓', 'var(--ai)')}
+        </div>
+      </div>
     </div>
-    <div class="fc g10" style="margin-top:12px">
-      <button class="btn btn-copy" onclick="copyDriftReport(this)">📋 Copy Full Audit Report</button>
+
+    <!-- PROMINENT HERO CARD: FINAL OPTIMIZED GENERATION PROMPT -->
+    <div class="final-prompt-card">
+      <div class="fb" style="margin-bottom:8px;flex-wrap:wrap;gap:8px">
+        <div class="fc g8">
+          <span style="font-size:16px">✨</span>
+          <div class="ctitle ai-ctitle" style="color:var(--acc);margin-bottom:0;font-size:13px">
+            FINAL OPTIMIZED GENERATION PROMPT
+          </div>
+          <span class="tag ok" style="font-size:10px">Ready for Seedance / Video Model</span>
+        </div>
+        <div class="fc g8">
+          <button class="btn btn-p btn-sm" onclick="copyFinalPrompt(this)">📋 Copy Final Prompt</button>
+          <button class="btn btn-s btn-sm" onclick="sendToPromptEnforcer()">✨ Send to Enforcer</button>
+        </div>
+      </div>
+      <div class="final-prompt-box" id="final-prompt-content">${escH(parsed.finalPrompt || response)}</div>
     </div>
+
+    <!-- EXPANDABLE TECHNICAL ANALYSIS (SECTION 42 SPECIFICATION) -->
+    <details class="card ai-card" style="margin-top:14px;background:var(--bg3);border-color:var(--bd2)">
+      <summary style="cursor:pointer;font-weight:700;color:var(--tx2);display:flex;align-items:center;justify-content:space-between;padding:4px 0">
+        <div class="fc g8">
+          <span>🔬 Detailed Technical Analysis & State Matrix</span>
+          <span class="tag ai" style="font-size:10px">Advanced Audit</span>
+        </div>
+        <span style="font-size:11px;color:var(--ai)">Click to Expand ▼</span>
+      </summary>
+      <div style="margin-top:14px;border-top:1px solid var(--bd2);padding-top:12px">
+        <div class="fb" style="margin-bottom:10px">
+          <span style="font-size:11px;color:var(--tx3)">Comprehensive physical state tracking, mirror checks, human kinematics, and dialogue timing</span>
+          <button class="btn btn-s btn-xs" onclick="copyDriftReport(this)">📋 Copy Full Audit</button>
+        </div>
+        <div id="drift-report-body" style="font-size:13px;line-height:1.8;color:var(--tx1)">
+          ${formatDriftReportMarkdown(parsed.details || response)}
+        </div>
+      </div>
+    </details>
   `;
-  const reportBody = document.getElementById('drift-report-body');
-  if(reportBody){
-    reportBody.innerHTML = formatDriftReportMarkdown(response);
-  }
 }
 
 // ═══════════════════════════════════════
-// DRIFT DETECTOR & STATE-TRACKING ENGINE (AI)
+// CONTINUITY & OPTIMIZATION ENGINE (AI)
 // ═══════════════════════════════════════
 async function runDriftDetect(){
   const scriptTextRaw = document.getElementById('drift-script')?.value.trim() || '';
@@ -1775,7 +1905,7 @@ async function runDriftDetect(){
       <div style="display:inline-block;width:34px;height:34px;border:3px solid var(--aiborder);border-top-color:var(--ai);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:14px"></div>
       <div style="font-size:15px;font-weight:700;color:var(--ai)">Connecting to Google Gemini Cloud API...</div>
       <div style="font-size:12px;color:var(--tx2);margin-top:6px">
-        Auditing physical state tracking, room compass graph, anatomical coordinates, and kinematics on <strong>${activeModel}</strong>${observedFrame ? ' with Multimodal Vision' : ''}...
+        Analyzing conditional continuity, human kinematics, physical geometry & synthesizing optimized generation prompt on <strong>${activeModel}</strong>${observedFrame ? ' with Multimodal Vision' : ''}...
       </div>
       <div style="font-size:11px;color:var(--tx2);margin-top:10px;opacity:0.75">
         (Live HTTP call to generativelanguage.googleapis.com · Zero local templates)
@@ -1790,8 +1920,8 @@ async function runDriftDetect(){
   const scriptText = scrubDramagicPrompt(scriptTextRaw);
 
   const scenes = [];
-  if(s1) scenes.push({label: s2 ? '[LAST GENERATED SCENE — Previous Shot Ground Truth]' : '[SCENE PROMPT TO AUDIT]', text: s1});
-  if(s2) scenes.push({label: s1 ? '[UPCOMING NEXT SCENE — To Audit & Check]' : '[SCENE PROMPT TO AUDIT]', text: s2});
+  if(s1) scenes.push({label: s2 ? '[PREVIOUS SHOT PROMPT — Baseline Context]' : '[SCENE PROMPT TO AUDIT]', text: s1});
+  if(s2) scenes.push({label: s1 ? '[NEW SHOT PROMPT — Authoritative Target]' : '[SCENE PROMPT TO AUDIT]', text: s2});
   if(s3) scenes.push({label: '[SUBSEQUENT SHOT — Sequence Take]', text: s3});
 
   const d = db();
@@ -1829,80 +1959,99 @@ async function runDriftDetect(){
       `If the rendered image shows an asymmetrical marker (e.g. scar, tattoo, watch, parting) on a different anatomical side, or with different clothing colors or room background, flag this observed state immediately to prevent compounding continuity drift!\n\n`;
   }
 
-  const prompt = `You are an elite television continuity supervisor, spatial director, and cinematic state-tracking auditor.
-Stop treating continuity as merely a vague "prompt-comparison" problem. Treat it as a strict PHYSICAL STATE-TRACKING and CONSTRAINT-VALIDATION SYSTEM.
-Conduct an uncompromising, microscopic continuity audit across the immutable state, observed visual state, and proposed shot state.
+  const prompt = `You are an elite television continuity supervisor, cinematographer, acting coach, and cinematic prompt engineer.
+Stop treating continuity as merely a vague "prompt-comparison" problem. Treat it as a strict CONDITIONAL CONTINUITY and PHYSICAL REALISM SYSTEM.
 
-DO NOT rewrite the entire scene prompt into a new full prompt. Your task is strictly to AUDIT, FLAG every discrepancy, validate constraints, and tell the filmmaker EXACTLY what changes to make in their prompt so the upcoming generation achieves 100% flawless flow and physical reality.
+CORE MISSION:
+PREVIOUS SHOT PROMPT + NEW SHOT PROMPT
+→ Understand what is still relevant (CONTINUE vs TRANSITION vs RESET)
+→ Detect contradictions (camera behind vs frontal, wardrobe overrides, prop transfers)
+→ Detect physical/human/cinematic problems (impossible kinematics, eyeline mismatch, duplicate character)
+→ Detect missing constraints & pacing issues (dialogue rate > 2.5 wps, temporal action beats)
+→ Improve pacing, dialogue delivery, emotion, geometry, and physics
+→ Produce ONE clean, generation-ready, optimized prompt for the NEW SHOT.
+
+THE NEW PROMPT IS AUTHORITATIVE. The previous prompt is temporary context, NOT blindly carried forward.
 
 ${visualNote}${spatialGraphSection}${scriptSection}IMMUTABLE CHARACTER BIBLE GROUND TRUTH (Canonical State):
 ${bibleCtx}
 
-DRAMAGIC SHOT PROMPTS:
+SHOT PROMPT INPUTS:
 ${scenes.length ? scenes.map(s => `${s.label}:\n${s.text}`).join('\n\n---\n\n') : '(No prompt text entered; audit from visual frame and script)'}
 
-MANDATORY CONTINUITY CONSTRAINTS & AUDIT RULES:
+MANDATORY CONTINUITY & PHYSICAL REALISM RULES:
+1. CONDITIONAL CONTINUITY RELATIONSHIP:
+   - CONTINUE: Same physical scene/immediate situation. Carry forward: identity, wardrobe, room geometry, spatial anchors, lighting, time, emotion progression.
+   - TRANSITION: Same narrative sequence, but location, blocking, camera, or immediate situation changes. Carry forward: identity, wardrobe, emotional progression, carried objects. DO NOT carry forward previous room geometry, lighting, or previous camera positions.
+   - RESET: New scene/location/time/situation. Reset previous room, furniture, camera, lighting, blocking, irrelevant props. Retain character identity only if same character appears.
+   - Classify previous details explicitly: INHERIT, CONDITIONAL, RESET, IRRELEVANT.
 
-1. INTENDED STATE vs. OBSERVED STATE:
-   - "Intended State": What the screenplay and Character Bible declare should exist.
-   - "Observed State": What actually appeared in the generated image/video frame (if attached) or what was established in the previous shot.
-   - When Intended and Observed disagree (e.g. prompt said left shoulder, but image shows right shoulder), FLAG THIS DISAGREEMENT explicitly! Never allow silent drift.
+2. CONTRADICTION RESOLUTION:
+   - The NEW SHOT PROMPT always wins when it explicitly changes something (e.g. wardrobe, action, location).
+   - Resolve camera perspective conflicts (e.g. camera behind subject cannot capture frontal facial expressions).
+   - Prop transfer: If a character sets down an object, it cannot remain in their hand.
+   - Eyeline matching & screen direction (180-degree rule) must be preserved.
+   - Duplicate character safeguard: Differentiate live physical character from recorded/surveillance footage.
 
-2. ANATOMICAL LEFT/RIGHT vs. SCREEN-LEFT/RIGHT (NEVER AMBIGUOUS):
-   - Never use "left" or "right" without specifying anatomical vs screen coordinates:
-     • Character's anatomical left/right (permanently attached to their body)
-     • Screen-left/right (camera viewpoint dependent)
-   - Rule: When a character faces the camera, their Anatomical Left is Screen-Right. When they face away, their Anatomical Left is Screen-Left.
-   - All body markers (scars, birthmarks, tattoos, hair partings, wristwatches) MUST remain anchored to their fixed anatomical side.
+3. ANATOMICAL COORDINATES vs SCREEN COORDINATES:
+   - Asymmetrical markers (scars, tattoos, birthmarks, hair partings, watches) are permanently locked to their anatomical side.
+   - When facing camera: Anatomical Left = Screen-Right. When facing away: Anatomical Left = Screen-Left.
+   - Prevent mirror flips.
 
-3. MIRROR DETECTION RULE (HARD VALIDATOR):
-   - If any asymmetrical marker (scar, tattoo, hair parting, eye patch, watch, injury) swaps anatomical sides, classify immediately as:
-     🔴 CRITICAL CONTINUITY ERROR — IDENTITY MARKER MIRRORED
-   - Stop generation until resolved.
-   - Continuity Error Severity Tiers:
-     🔴 Critical: Identity marker mirrored (scar/parting switches sides), character identity switch, room layout flipped, door/window moved to a different compass wall.
-     🟠 Major: Character suddenly teleports across room or switches side of table without walking; prop magically disappears or switches hands.
-     🟡 Moderate: Wardrobe detail or color variance.
-     🟢 Minor: Natural ambient lighting/weather variation.
+4. HUMAN REALISM & KINEMATICS:
+   - Humans have mass; walking speed ~3-4 ft/sec. Characters cannot instantly teleport or slide without physical traversal steps and elapsed time.
+   - Posture transitions require kinetic preparation (sitting to standing).
+   - Divide action into clear temporal beats (e.g. 0-2s initial state, 2-4s primary action, 4-6s reaction/beat).
+   - Realistic secondary motion: natural blinking (12-18 bpm, suppressed under intense concentration), weight shifts, breathing cadence.
 
-4. SPATIAL ANCHORS & COMPASS ROOM GEOMETRY:
-   - Check against established room walls (North, East, South, West) and anchors (ANCHOR_01 to ANCHOR_04).
-   - Furniture and fixtures must not change walls. Character headings must match camera angles.
+5. DIALOGUE & PERFORMANCE:
+   - Dialogue delivery: max ~2.5 words per second. If dialogue is too long for estimated duration, condense or pace appropriately.
+   - Listening performance: mouth closed, subtle micro-reactions (micro-nod, eye focus shift, swallow, tension in jaw).
+   - Emotional progression: translate internal emotion into observable physical behavior.
 
-5. HUMAN KINEMATICS & TRAVERSAL PLAUSIBILITY ("A CHARACTER CANNOT MOVE HERE AND THERE INSTANTLY"):
-   - Real-world human movement physics: Human beings have physical mass and travel ~3 to 4 feet per second for a normal walk.
-   - In immediate cuts or short shots, characters CANNOT teleport, slide, or instantly cross distances without physical footsteps and elapsed traversal time.
-   - Posture Transition Mechanics: A character cannot instantly snap from kneeling/sitting to standing upright without the kinetic motion of standing up first.
-   - Relational Distance: Proximity between characters cannot jump without physical movement.
-   - Forbid unnatural sliding across floors, skating motion, or floating feet.
+OUTPUT FORMAT REQUIREMENTS:
+Provide your output strictly in these sections:
 
-6. CAST ROSTER & SCRIPT FIDELITY:
-   - Cross-check every character in the Original Screenplay (e.g. TEEN Evelyn, flashback younger self, co-stars). If missing in the prompt, flag explicitly!
+### 🎯 CONTINUITY & INHERITANCE
+Mode: [CONTINUE | TRANSITION | RESET]
+- ✓ [Element inherited and carried forward]
+- ↻ [Element reset from previous shot]
+- → [Emotional progression or handoff]
 
-7. IRIS / EYE COLOR INVARIANCE & AUDIO DELIVERY:
-   - Verify eye colors are permanently locked to prevent random model color drift.
-   - Mandate 100% English spoken delivery; strictly suppress Chinese/Mandarin audio and Hanzi subtitles.
+### ⚠️ RISKS FLAGGED
+- ⚠ [Risk 1: geometry, camera conflict, pacing, kinematics, dialogue, or physics]
+- ⚠ [Risk 2: ...]
 
-REPORT FORMAT REQUIRED (Strictly provide these 4 structured sections):
+### 🛠️ CORRECTIONS APPLIED
+- ✓ [Correction 1: exact adjustment made to resolve risk]
+- ✓ [Correction 2: exact adjustment made to resolve risk]
 
-### 📊 1. STRUCTURED CONTINUITY STATE MATRIX
-Present a clean, high-precision markdown table comparing:
-| Element / Character / Prop | Intended Canonical State (Bible/Script) | Observed State (Previous Shot/Frame) | Proposed Next Shot State | Status & Constraint Audit |
-(Include characters, anatomical markers/scars, hair partings, wardrobe, positions, and room anchors)
+### ✨ FINAL OPTIMIZED GENERATION PROMPT
+[Produce ONE single, complete, production-ready cinematic prompt structured with:
+- SHOT INTENT
+- SUBJECT & IDENTITY (immutable character tokens)
+- ENVIRONMENT & LIGHTING
+- SPATIAL GEOMETRY & CAMERA (framing, lens, movement)
+- ACTION & TEMPORAL BEATS (broken into timed phase beats)
+- EMOTIONAL PERFORMANCE & EXPRESSION (observable physical behavior)
+- DIALOGUE & AUDIO DELIVERY (if dialogue present, natural cadence, 100% English)
+- CONTINUITY LOCK & PHYSICAL SAFEGUARDS (anti-sliding, anti-mirroring, weight gravity)]
 
-### 🔄 2. MIRROR DETECTION & SPATIAL ANCHOR AUDIT (HARD CONSTRAINTS)
-(Itemize anatomical vs screen coordinates, mirror rule checks, and compass anchor adherence. Explicitly label findings using Severity Tiers: 🔴 Critical, 🟠 Major, 🟡 Moderate, 🟢 Minor)
-
-### 🚶 3. CHARACTER POSITION & HUMAN KINEMATICS AUDIT
-(Dissect character positions using realistic human physics: travel distance vs elapsed traversal time, posture transition realism, relational proximity between subjects, screen-left/right anchoring, and forbidding sliding/floating movements)
-
-### 📜 4. CONTINUITY CONTRACT & PROMPT ADJUSTMENTS ("Kya Kya Karna Chahiye")
-(Provide a clear, high-impact, actionable point-by-point checklist of exact adjustments the filmmaker needs to make in their prompt so the upcoming generation achieves 100% flawless flow, obeys human kinematics, and preserves complete visual fidelity)`;
+### 🔬 DETAILED TECHNICAL ANALYSIS
+#### 1. Structured Continuity State Matrix
+| Element / Character / Prop | Intended Canonical State | Observed State | Proposed Next Shot | Status & Constraint Audit |
+...
+#### 2. Spatial Graph & Coordinate Verification
+...
+#### 3. Human Kinematics & Physics Audit
+...
+#### 4. Dialogue Timing & Performance Analysis
+...`;
 
   try {
     const response = await gemini(
       prompt,
-      'You are a premier television script supervisor and cinematic continuity director. You audit scene flow, validate physical state tracking, enforce anatomical coordinate rules, and provide clear actionable instructions for flawless visual continuity. All content is fictional creative screenwriting.',
+      'You are a premier television continuity supervisor and cinematic prompt engineer. You audit conditional scene continuity, validate physical kinematics, and synthesize clean, production-ready generation prompts. All content is fictional creative screenwriting.',
       0.35,
       observedFrame
     );
@@ -1944,6 +2093,23 @@ function copyDriftReport(btn){
     const o=btn.textContent;btn.textContent='✓ Copied!';
     setTimeout(()=>{btn.textContent=o;},2000);
   });
+}
+function copyFinalPrompt(btn){
+  if(!window._lastFinalPrompt)return;
+  navigator.clipboard.writeText(window._lastFinalPrompt).then(()=>{
+    const o=btn.textContent;btn.textContent='✓ Copied Prompt!';
+    btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},2000);
+  });
+}
+function sendToPromptEnforcer(){
+  if(!window._lastFinalPrompt)return;
+  const enfInput = document.getElementById('enf-input');
+  if(enfInput){
+    enfInput.value = window._lastFinalPrompt;
+    showPage('enforcer');
+    enfInput.scrollIntoView({behavior:'smooth'});
+  }
 }
 
 // ═══════════════════════════════════════

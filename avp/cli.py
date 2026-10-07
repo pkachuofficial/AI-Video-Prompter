@@ -43,7 +43,9 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 bible_app = typer.Typer(help="Manage the Production Bible (characters, wardrobes, scenes).")
+continuity_app = typer.Typer(help="Prompt-centric cinematic continuity and human-realism bridge.")
 app.add_typer(bible_app, name="bible")
+app.add_typer(continuity_app, name="continuity")
 
 console = Console()
 
@@ -267,6 +269,49 @@ def artifacts(
         )
 
     console.print(table)
+
+
+# ---------------------------------------------------------------------------
+# continuity optimize — prompt-centric continuity bridge
+# ---------------------------------------------------------------------------
+
+@continuity_app.command("optimize")
+def optimize_continuity(
+    prev: str = typer.Option("", "--prev", "-p", help="Previous shot prompt baseline"),
+    new: str = typer.Option(..., "--new", "-n", help="New shot prompt to audit and optimize"),
+    duration: float = typer.Option(6.0, "--duration", "-d", help="Estimated shot duration in seconds"),
+    show_details: bool = typer.Option(False, "--details", help="Display full technical internal analysis"),
+) -> None:
+    """Analyze continuity between two prompts and output an optimized generation prompt."""
+    from rich.panel import Panel
+    from avp.continuity import ContinuityBridge
+
+    bridge = ContinuityBridge()
+    report = bridge.analyze_and_optimize(prev, new, duration_sec=duration)
+
+    console.print(f"\n[bold cyan]CONTINUITY MODE:[/bold cyan] [bold yellow]{report.mode.value}[/bold yellow]\n")
+
+    if report.continuity_items:
+        console.print("[bold green]CONTINUITY:[/bold green]")
+        for item in report.continuity_items:
+            console.print(f"  {item}")
+
+    if report.risks:
+        console.print("\n[bold yellow]RISKS FLAGGED:[/bold yellow]")
+        for r in report.risks:
+            console.print(f"  {r}")
+
+    if report.corrections:
+        console.print("\n[bold blue]CORRECTIONS APPLIED:[/bold blue]")
+        for c in report.corrections:
+            console.print(f"  {c}")
+
+    console.print()
+    console.print(Panel(report.final_prompt, title="[bold green]FINAL GENERATION PROMPT[/bold green]", border_style="green"))
+
+    if show_details:
+        console.print("\n[dim]Detailed Technical Analysis:[/dim]")
+        console.print_json(json.dumps(report.detailed_analysis, indent=2))
 
 
 # ---------------------------------------------------------------------------

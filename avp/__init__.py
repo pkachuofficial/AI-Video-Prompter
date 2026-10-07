@@ -10,4 +10,6 @@ try:
 except PackageNotFoundError:
     __version__ = "0.1.0-dev"
 
-__all__ = ["__version__"]
+from avp.continuity import ContinuityBridge, ContinuityMode, ContinuityReport
+
+__all__ = ["__version__", "ContinuityBridge", "ContinuityMode", "ContinuityReport"]
