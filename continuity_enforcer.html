@@ -190,6 +190,12 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
 .mt8{margin-top:8px}.mt12{margin-top:12px}.mt18{margin-top:18px}
 .dim{color:var(--tx3);font-size:12px}
 .sec-badge{display:inline-block;background:var(--bghov);border:1px solid var(--bd2);color:var(--tx2);font-size:10px;font-weight:600;padding:1px 7px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase}
+/* ── REPORT TABLE ── */
+.report-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px;background:var(--bg2);border-radius:6px;overflow:hidden}
+.report-table th,.report-table td{border:1px solid var(--bd2);padding:8px 10px;text-align:left;vertical-align:top}
+.report-table th{background:var(--bg4);color:var(--acc);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+.report-table tr:nth-child(even){background:rgba(255,255,255,0.02)}
+.report-table td strong{color:var(--tx1)}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
 </style>
 </head>
@@ -291,8 +297,8 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
 
 <!-- ══ PAGE: DRIFT DETECTOR (AI) ══ -->
 <div id="page-drift" class="page">
-  <div class="ptitle">🔍 Sequential Shot Flow & Drift Auditor</div>
-  <div class="pdesc">Audit the upcoming shot against your <strong>Last Generated Scene</strong> and <strong>Original Screenplay</strong>. Ensures unbroken flow across character spatial blocking, room geometry, eye color invariance, natural emotional momentum, and English-only dialogue. Provides step-by-step required fixes (<em>"kya kya karna chahiye"</em>) and a production-ready rewritten prompt for your next video generation.</div>
+  <div class="ptitle">🔍 Sequential Shot Flow & Continuity State Auditor</div>
+  <div class="pdesc">Transform continuity from prompt comparison into physical state-tracking & constraint validation. Upload previous generated video/frame for multimodal ground truth (intended vs observed state), lock room geometry to spatial anchor graphs, prevent mirror flips, and audit human kinematics.</div>
 
   <div id="drift-ai-warn" class="status warn" style="display:none">⚠ No Gemini API key set. Go to Settings → AI Configuration.</div>
 
@@ -302,8 +308,82 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
       <span class="tag acc" style="font-size:10px">Screenplay Reference</span>
     </div>
     <div class="fg">
-      <label style="color:var(--tx2)">Paste your original screenplay scene, action description, or dialogue beat here. Gemini 3.1 Flash will cross-check both shots against this ground truth to ensure nothing is missed (e.g. TEEN Evelyn entering, prop changes).</label>
-      <textarea id="drift-script" style="min-height:100px;font-size:12px;font-family:monospace;line-height:1.65" placeholder="e.g. INT. RECEPTION LOBBY - DAY&#10;Evelyn enters clutching her black folder in her right hand. In the doorway reflection, TEEN Evelyn watches silently..."></textarea>
+      <label style="color:var(--tx2)">Paste your original screenplay scene, action description, or dialogue beat here. Gemini will cross-check both shots against this ground truth to ensure nothing is missed (e.g. TEEN Evelyn entering, prop changes).</label>
+      <textarea id="drift-script" style="min-height:90px;font-size:12px;font-family:monospace;line-height:1.65" placeholder="e.g. INT. RECEPTION LOBBY - DAY&#10;Evelyn enters clutching her black folder in her right hand. In the doorway reflection, TEEN Evelyn watches silently..."></textarea>
+    </div>
+  </div>
+
+  <!-- MULTIMODAL OBSERVED VISUAL GROUND TRUTH CARD -->
+  <div class="card ai-card" style="border-left:3px solid #10b981;">
+    <div class="fb" style="margin-bottom:8px">
+      <div class="ctitle ai-ctitle" style="color:#10b981;margin-bottom:0">🎞️ OBSERVED VISUAL GROUND TRUTH (Generated Video Frame / Image)</div>
+      <span class="tag ok" style="font-size:10px">Multimodal Vision Ground Truth</span>
+    </div>
+    <div class="fg">
+      <label style="color:var(--tx2)">Upload your <strong>actual generated video (.mp4, .webm)</strong> or <strong>last generated frame (.png, .jpg, .webp)</strong>. Gemini Vision directly inspects what was <em>actually rendered</em> (scars, hair parting, wardrobe colors, prop positions) vs intended, eliminating compounding drift.</label>
+      
+      <div id="dropzone-observed" onclick="document.getElementById('file-observed').click()" 
+           ondragover="handleObservedDragOver(event)" ondragleave="handleObservedDragLeave(event)" ondrop="handleObservedDrop(event)"
+           style="border:2px dashed var(--bd2);border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;background:var(--bginp);transition:.2s">
+        <input type="file" id="file-observed" accept="image/*,video/mp4,video/webm" style="display:none" onchange="handleObservedFile(event)">
+        <div id="dropzone-observed-prompt">
+          <div style="font-size:24px;margin-bottom:6px">📁 📸 🎞️</div>
+          <div style="font-weight:600;color:var(--tx1);font-size:13px">Drop Generated Video or Frame here, or <span style="color:var(--ai);text-decoration:underline">browse</span></div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:4px">Supports MP4, WebM (auto-extracts final frame) or PNG, JPG, WebP images</div>
+        </div>
+        <div id="dropzone-observed-preview" style="display:none;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap">
+          <img id="observed-preview-img" src="" style="max-height:110px;border-radius:6px;border:1px solid var(--bd2);object-fit:cover" alt="Observed Frame Preview">
+          <div style="text-align:left">
+            <div id="observed-preview-filename" style="font-weight:600;font-size:13px;color:var(--ok)"></div>
+            <div id="observed-preview-details" style="font-size:11px;color:var(--tx2);margin-top:2px"></div>
+            <button type="button" class="btn btn-del btn-xs" style="margin-top:8px" onclick="clearObservedFrame(event)">🗑️ Remove Frame</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPATIAL ANCHORS & COMPASS COORDINATE CARD -->
+  <div class="card ai-card" style="border-left:3px solid #6366f1;">
+    <div class="fb" style="margin-bottom:8px;cursor:pointer" onclick="toggleCompassCard()">
+      <div class="ctitle ai-ctitle" style="color:#6366f1;margin-bottom:0">🧭 SPATIAL ANCHOR GRAPH & COMPASS COORDINATES (Room Geography)</div>
+      <div class="fc g8">
+        <span class="tag ai" style="font-size:10px">Fixed Coordinate System</span>
+        <span id="compass-toggle-icon" style="color:var(--tx2);font-size:12px">▼</span>
+      </div>
+    </div>
+    <div id="compass-card-body">
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.6">
+        Lock objects to permanent wall anchors and cardinal headings. Prevents doors, windows, and furniture from swapping walls or floating across shots.
+      </div>
+      <div class="frow">
+        <div class="fg">
+          <label>Room / Set Name</label>
+          <input type="text" id="drift-room-name" placeholder="e.g. Evelyn's Bedroom, Hotel Reception Lobby">
+        </div>
+        <div class="fg">
+          <label>Camera Position & Heading</label>
+          <input type="text" id="drift-cam-coord" placeholder="e.g. Position: SOUTHWEST, Heading: Facing NORTHEAST">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
+        <div class="fg">
+          <label>⬆️ North Wall Anchor (ANCHOR_01)</label>
+          <input type="text" id="drift-anchor-north" placeholder="e.g. Double Window, Headboard against North Wall">
+        </div>
+        <div class="fg">
+          <label>➡️ East Wall Anchor (ANCHOR_02)</label>
+          <input type="text" id="drift-anchor-east" placeholder="e.g. Entrance Wooden Door, Hallway corridor">
+        </div>
+        <div class="fg">
+          <label>⬇️ South Wall Anchor (ANCHOR_03)</label>
+          <input type="text" id="drift-anchor-south" placeholder="e.g. Wardrobe closet, Balcony sliding door">
+        </div>
+        <div class="fg">
+          <label>⬅️ West Wall Anchor (ANCHOR_04)</label>
+          <input type="text" id="drift-anchor-west" placeholder="e.g. Owl bookshelf at 1.7m height, Work desk">
+        </div>
+      </div>
     </div>
   </div>
 
@@ -314,7 +394,7 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
     </div>
     <div class="fg">
       <label style="color:var(--tx2)">Paste the Dramagic prompt of the video you <strong>already generated</strong>. The AI analyzes characters' ending coordinates, screen-left/right positions, room geometry, prop locations, and emotional momentum to establish unbroken continuity.</label>
-      <textarea id="drift-s1" style="min-height:120px;font-size:12px;font-family:monospace;line-height:1.65" placeholder="Paste the prompt of your previously generated shot here (e.g. Evelyn stands screen-left by the lobby desk, black folder on floor, looking toward elevator)..."></textarea>
+      <textarea id="drift-s1" style="min-height:100px;font-size:12px;font-family:monospace;line-height:1.65" placeholder="Paste the prompt of your previously generated shot here (e.g. Evelyn stands screen-left by the lobby desk, black folder on floor, looking toward elevator)..."></textarea>
     </div>
   </div>
 
@@ -324,20 +404,20 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
       <span class="tag ai" style="font-size:10px">Upcoming Video Prompt</span>
     </div>
     <div class="fg">
-      <label style="color:var(--tx2)">Paste the prompt for the <strong>next video shot you want to generate</strong>. Gemini 3.1 Flash will audit it against the previous shot & script, detect any spatial jumps or missing elements, tell you <em>"kya kya karna chahiye"</em>, and rewrite it for flawless flow.</label>
-      <textarea id="drift-s2" style="min-height:120px;font-size:12px;font-family:monospace;line-height:1.65" placeholder="Paste the prompt of the next shot you are preparing to generate..."></textarea>
+      <label style="color:var(--tx2)">Paste the prompt for the <strong>next video shot you want to generate</strong>. Gemini will audit it against the previous shot & script, detect any spatial jumps or missing elements, tell you <em>"kya kya karna chahiye"</em>, and rewrite it for flawless flow.</label>
+      <textarea id="drift-s2" style="min-height:100px;font-size:12px;font-family:monospace;line-height:1.65" placeholder="Paste the prompt of the next shot you are preparing to generate..."></textarea>
     </div>
   </div>
 
   <div class="card ai-card" id="drift-s3-card" style="display:none">
     <div class="ctitle ai-ctitle">⏭️ Shot 3 (Subsequent Shot — optional)</div>
     <div class="fg">
-      <textarea id="drift-s3" style="min-height:120px;font-size:12px;font-family:monospace;line-height:1.65" placeholder="Paste Shot 3 prompt if doing a 3-shot sequence audit…"></textarea>
+      <textarea id="drift-s3" style="min-height:100px;font-size:12px;font-family:monospace;line-height:1.65" placeholder="Paste Shot 3 prompt if doing a 3-shot sequence audit…"></textarea>
     </div>
   </div>
 
   <div class="fc g10" style="margin-bottom:18px">
-    <button class="btn btn-ai" onclick="runDriftDetect()">🔍 Audit Next Scene & Ensure Continuity Flow</button>
+    <button class="btn btn-ai" onclick="runDriftDetect()">🔍 Audit Next Scene (State Tracking & Constraint Validation)</button>
     <button class="btn btn-s btn-sm" onclick="document.getElementById('drift-s3-card').style.display='block'">+ Add Shot 3</button>
     <span id="drift-msg" class="dim"></span>
   </div>
@@ -492,6 +572,29 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
     <div class="fg"><label>Skin Tone</label><input type="text" id="c-skin" placeholder="e.g. Light olive, warm natural undertone"></div>
   </div>
   <div class="fg"><label>Build & Physique</label><input type="text" id="c-build" placeholder="e.g. Tall lean athletic, broad shoulders"></div>
+  <div class="card" style="background:var(--bg4);border:1px solid var(--bd2);padding:12px 14px;margin-bottom:12px;border-radius:8px">
+    <div style="font-size:11px;font-weight:700;color:var(--acc);letter-spacing:.8px;margin-bottom:8px">🔒 IMMUTABLE BODY MARKERS & ANATOMICAL COORDINATES</div>
+    <div class="frow">
+      <div class="fg" style="margin-bottom:8px">
+        <label>Anatomical Body Markers / Scars / Tattoos</label>
+        <input type="text" id="c-markers" placeholder="e.g. Crescent scar on anatomical LEFT posterior shoulder; tattoo right wrist">
+      </div>
+      <div class="fg" style="margin-bottom:8px">
+        <label>Hair Parting & Asymmetry</label>
+        <select id="c-parting">
+          <option value="none">Symmetrical / No distinct parting</option>
+          <option value="left">Parted on Anatomical LEFT</option>
+          <option value="right">Parted on Anatomical RIGHT</option>
+          <option value="center">Center parted</option>
+          <option value="asymmetric">Asymmetric bangs / swept</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:0">
+      <label>Temporal Story State (Injuries, blood, dirt that persist from specific scenes)</label>
+      <input type="text" id="c-temporal" placeholder="e.g. Right wrist cut (introduced Scene 42), faint cheek bruise">
+    </div>
+  </div>
   <div class="fg"><label>Default Wardrobe</label><textarea id="c-ward" style="min-height:55px" placeholder="e.g. White Oxford shirt, dark navy trousers, black leather shoes"></textarea></div>
   <div class="fg"><label>Drift Suppression Negatives</label><textarea id="c-neg" style="min-height:55px" placeholder="e.g. beard, glasses, blonde hair, bald, overweight, feminine features"></textarea></div>
   <hr>
@@ -627,9 +730,19 @@ function sanitizeDramagicPrompt(text){
     .trim();
 }
 
-async function callGeminiApi(model, apiKey, prompt, systemText = '', threshold = 'BLOCK_NONE', temperature = 0.35){
+async function callGeminiApi(model, apiKey, prompt, systemText = '', threshold = 'BLOCK_NONE', temperature = 0.35, imagePart = null){
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  const contents = [{ role: 'user', parts: [{ text: prompt }] }];
+  const userParts = [];
+  if(imagePart && imagePart.data && imagePart.mimeType){
+    userParts.push({
+      inlineData: {
+        mimeType: imagePart.mimeType,
+        data: imagePart.data
+      }
+    });
+  }
+  userParts.push({ text: prompt });
+  const contents = [{ role: 'user', parts: userParts }];
   
   const body = {
     contents,
@@ -702,7 +815,7 @@ async function callGeminiApi(model, apiKey, prompt, systemText = '', threshold =
   return text;
 }
 
-async function gemini(prompt, systemPrompt = '', temperature = 0.35){
+async function gemini(prompt, systemPrompt = '', temperature = 0.35, imagePart = null){
   const apiKey = getApiKey();
   if(!apiKey) throw new Error('No API key set. Go to Settings → AI Configuration.');
   const model = getModel() || 'gemini-3.1-flash-lite';
@@ -710,7 +823,7 @@ async function gemini(prompt, systemPrompt = '', temperature = 0.35){
   const defaultSystem = systemPrompt || 'You are an expert television continuity supervisor and screenplay script editor for a cinematic television drama production. Analyze creative drama writing, camera scene prompts, and screenplay text for narrative fidelity and physical continuity. All content is fictional creative screenwriting.';
 
   try {
-    return await callGeminiApi(model, apiKey, prompt, defaultSystem, 'BLOCK_NONE', temperature);
+    return await callGeminiApi(model, apiKey, prompt, defaultSystem, 'BLOCK_NONE', temperature, imagePart);
   } catch(err) {
     const errMsg = err.message || '';
     const isSafety = errMsg.includes('safety') || errMsg.includes('PROHIBITED_CONTENT') || errMsg.includes('blocked');
@@ -735,13 +848,13 @@ async function gemini(prompt, systemPrompt = '', temperature = 0.35){
 
       // Try BLOCK_NONE on current model, then fallback to gemini-2.5-flash or gemini-1.5-flash
       try {
-        return await callGeminiApi(model, apiKey, neutralPrompt, neutralSystem, 'BLOCK_NONE', temperature);
+        return await callGeminiApi(model, apiKey, neutralPrompt, neutralSystem, 'BLOCK_NONE', temperature, imagePart);
       } catch(err2) {
         if(model !== 'gemini-2.5-flash'){
           try {
-            return await callGeminiApi('gemini-2.5-flash', apiKey, neutralPrompt, neutralSystem, 'BLOCK_NONE', temperature);
+            return await callGeminiApi('gemini-2.5-flash', apiKey, neutralPrompt, neutralSystem, 'BLOCK_NONE', temperature, imagePart);
           } catch(err3) {
-            return await callGeminiApi('gemini-1.5-flash', apiKey, neutralPrompt, neutralSystem, 'BLOCK_NONE', temperature);
+            return await callGeminiApi('gemini-1.5-flash', apiKey, neutralPrompt, neutralSystem, 'BLOCK_NONE', temperature, imagePart);
           }
         }
         throw err2;
@@ -787,8 +900,11 @@ function renderBible(){
         <div class="calias">${c.alias}</div>
         <div class="cprev">${c.face?c.face.substring(0,100)+'…':'(no face description)'}</div>
         <div style="margin-top:7px;display:flex;gap:5px;flex-wrap:wrap">
-          ${c.hair?`<span class="tag">${c.hair.substring(0,45)}</span>`:''}
-          ${c.skin?`<span class="tag">${c.skin.substring(0,35)}</span>`:''}
+          ${c.hair?`<span class="tag">${c.hair.substring(0,40)}</span>`:''}
+          ${c.skin?`<span class="tag">${c.skin.substring(0,30)}</span>`:''}
+          ${c.markers?`<span class="tag err" title="Anatomical marker">📍 ${c.markers.substring(0,45)}</span>`:''}
+          ${c.parting&&c.parting!=='none'?`<span class="tag acc" title="Hair parting">✂️ Part: ${c.parting}</span>`:''}
+          ${c.temporal?`<span class="tag warn" title="Temporal story state">⏳ ${c.temporal.substring(0,40)}</span>`:''}
         </div>
       </div>
       <div class="cacts">
@@ -801,7 +917,7 @@ function renderBible(){
 function openModal(id=null){
   _eid=id;
   document.getElementById('modal-ttl').textContent=id?'Edit Character':'Add Character to Bible';
-  const fields=['c-name','c-alias','c-face','c-hair','c-skin','c-build','c-ward','c-neg'];
+  const fields=['c-name','c-alias','c-face','c-hair','c-skin','c-build','c-markers','c-temporal','c-ward','c-neg'];
   if(id){
     const c=db().chars.find(x=>x.id===id);
     if(c){
@@ -811,10 +927,16 @@ function openModal(id=null){
       document.getElementById('c-hair').value=c.hair||'';
       document.getElementById('c-skin').value=c.skin||'';
       document.getElementById('c-build').value=c.build||'';
+      document.getElementById('c-markers').value=c.markers||'';
+      document.getElementById('c-parting').value=c.parting||'none';
+      document.getElementById('c-temporal').value=c.temporal||'';
       document.getElementById('c-ward').value=c.wardrobe||'';
       document.getElementById('c-neg').value=c.negative||'';
     }
-  } else {fields.forEach(f=>document.getElementById(f).value='');}
+  } else {
+    fields.forEach(f=>document.getElementById(f).value='');
+    document.getElementById('c-parting').value='none';
+  }
   document.getElementById('cmodal').classList.add('open');
   document.getElementById('c-name').focus();
 }
@@ -830,6 +952,9 @@ function saveChar(){
     hair:document.getElementById('c-hair').value.trim(),
     skin:document.getElementById('c-skin').value.trim(),
     build:document.getElementById('c-build').value.trim(),
+    markers:document.getElementById('c-markers').value.trim(),
+    parting:document.getElementById('c-parting').value,
+    temporal:document.getElementById('c-temporal').value.trim(),
     wardrobe:document.getElementById('c-ward').value.trim(),
     negative:document.getElementById('c-neg').value.trim()};
   const d=db();
@@ -1347,15 +1472,221 @@ function cleanBibleCtx(bibleChars, allSceneText){
     const face = c.face || 'Grounded natural human facial features';
     const hair = c.hair || 'Natural hair';
     const skin = c.skin || 'Natural skin tone';
+    const markers = c.markers ? ` | Anatomical Markers: ${c.markers}` : '';
+    const parting = (c.parting && c.parting !== 'none') ? ` | Hair Parting: Parted on Anatomical ${c.parting.toUpperCase()}` : '';
+    const temporal = c.temporal ? ` | Story State (Active): ${c.temporal}` : '';
     const wardrobe = c.wardrobe || 'Signature styling';
 
-    return `${name}${alias}: Face: ${face} | Hair: ${hair} | Skin: ${skin} | Wardrobe: ${wardrobe}`;
+    return `${name}${alias}: Face: ${face} | Hair: ${hair} | Skin: ${skin}${markers}${parting}${temporal} | Wardrobe: ${wardrobe}`;
   }).join('\n');
 }
+// ═══════════════════════════════════════
+// MULTIMODAL FRAME & SPATIAL ANCHOR HANDLERS
+// ═══════════════════════════════════════
+function handleObservedDragOver(e){
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('dropzone-observed');
+  if(dz) dz.style.borderColor = 'var(--ai)';
+}
+function handleObservedDragLeave(e){
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('dropzone-observed');
+  if(dz) dz.style.borderColor = 'var(--bd2)';
+}
+function handleObservedDrop(e){
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('dropzone-observed');
+  if(dz) dz.style.borderColor = 'var(--bd2)';
+  if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]){
+    processObservedFile(e.dataTransfer.files[0]);
+  }
+}
+function handleObservedFile(e){
+  if(e.target.files && e.target.files[0]){
+    processObservedFile(e.target.files[0]);
+  }
+}
+function processObservedFile(file){
+  if(!file) return;
+  const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov)$/i.test(file.name);
+  const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(file.name);
+  if(!isVideo && !isImage){
+    alert('Please upload an image (.png, .jpg, .webp) or video (.mp4, .webm).');
+    return;
+  }
+
+  const promptEl = document.getElementById('dropzone-observed-prompt');
+  const prevEl = document.getElementById('dropzone-observed-preview');
+  const imgEl = document.getElementById('observed-preview-img');
+  const nameEl = document.getElementById('observed-preview-filename');
+  const detEl = document.getElementById('observed-preview-details');
+
+  if(isImage){
+    const reader = new FileReader();
+    reader.onload = function(evt){
+      const dataUrl = evt.target.result;
+      const base64 = dataUrl.split(',')[1];
+      window._observedFrame = {
+        mimeType: file.type || 'image/jpeg',
+        data: base64,
+        fileName: file.name
+      };
+      if(imgEl) imgEl.src = dataUrl;
+      if(nameEl) nameEl.textContent = '🖼️ ' + file.name;
+      if(detEl) detEl.textContent = `Image Ground Truth (${(file.size/1024).toFixed(1)} KB) · Loaded for Multimodal Vision Analysis`;
+      if(promptEl) promptEl.style.display = 'none';
+      if(prevEl) prevEl.style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+  } else if(isVideo){
+    if(nameEl) nameEl.textContent = '🎞️ Extracting final frame from ' + file.name + '...';
+    if(detEl) detEl.textContent = 'Extracting canvas frame via browser...';
+    if(promptEl) promptEl.style.display = 'none';
+    if(prevEl) prevEl.style.display = 'flex';
+
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.muted = true;
+    video.playsInline = true;
+    const url = URL.createObjectURL(file);
+    video.src = url;
+
+    video.onloadedmetadata = function(){
+      const targetTime = Math.max(0, video.duration - 0.15);
+      video.currentTime = targetTime;
+    };
+    video.onseeked = function(){
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 360;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+        const base64 = dataUrl.split(',')[1];
+        window._observedFrame = {
+          mimeType: 'image/jpeg',
+          data: base64,
+          fileName: file.name + ' (Extracted Frame)'
+        };
+        if(imgEl) imgEl.src = dataUrl;
+        if(nameEl) nameEl.textContent = '🎞️ ' + file.name;
+        if(detEl) detEl.textContent = `Video Final Frame Extracted (${canvas.width}x${canvas.height}) · Ready for Gemini Vision Inspection`;
+        URL.revokeObjectURL(url);
+      } catch(err){
+        alert('Could not extract frame from video: ' + err.message);
+        clearObservedFrame();
+      }
+    };
+    video.onerror = function(){
+      alert('Error loading video file.');
+      clearObservedFrame();
+      URL.revokeObjectURL(url);
+    };
+  }
+}
+function clearObservedFrame(e){
+  if(e){
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  window._observedFrame = null;
+  const fileInput = document.getElementById('file-observed');
+  if(fileInput) fileInput.value = '';
+  const promptEl = document.getElementById('dropzone-observed-prompt');
+  const prevEl = document.getElementById('dropzone-observed-preview');
+  const imgEl = document.getElementById('observed-preview-img');
+  if(promptEl) promptEl.style.display = 'block';
+  if(prevEl) prevEl.style.display = 'none';
+  if(imgEl) imgEl.src = '';
+}
+function toggleCompassCard(){
+  const body = document.getElementById('compass-card-body');
+  const icon = document.getElementById('compass-toggle-icon');
+  if(!body) return;
+  if(body.style.display === 'none'){
+    body.style.display = 'block';
+    if(icon) icon.textContent = '▼';
+  } else {
+    body.style.display = 'none';
+    if(icon) icon.textContent = '▶';
+  }
+}
+
+// ═══════════════════════════════════════
+// MARKDOWN TABLE & REPORT FORMATTER
+// ═══════════════════════════════════════
+function formatDriftReportMarkdown(text){
+  if(!text) return '';
+  const lines = text.split('\n');
+  let out = [];
+  let inTable = false;
+  let tableRows = [];
+
+  function formatInline(str){
+    return escH(str)
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code style="background:var(--bg4);padding:1px 5px;border-radius:3px;color:var(--acc)">$1</code>');
+  }
+
+  function flushTable(){
+    if(!tableRows.length) return;
+    let html = '<div style="overflow-x:auto;margin:12px 0"><table class="report-table">';
+    let headerDone = false;
+    tableRows.forEach(row => {
+      const rawCells = row.split('|').slice(1, -1);
+      if(!rawCells.length) return;
+      const cells = rawCells.map(c => c.trim());
+      if(cells.every(c => /^[-: ]+$/.test(c))) return;
+      if(!headerDone){
+        html += '<thead><tr>' + cells.map(c => `<th>${formatInline(c)}</th>`).join('') + '</tr></thead><tbody>';
+        headerDone = true;
+      } else {
+        html += '<tr>' + cells.map(c => `<td>${formatInline(c)}</td>`).join('') + '</tr>';
+      }
+    });
+    html += '</tbody></table></div>';
+    out.push(html);
+    tableRows = [];
+    inTable = false;
+  }
+
+  for(let i = 0; i < lines.length; i++){
+    const l = lines[i];
+    const trimmed = l.trim();
+    if(trimmed.startsWith('|') && trimmed.endsWith('|')){
+      inTable = true;
+      tableRows.push(trimmed);
+    } else {
+      if(inTable){
+        flushTable();
+      }
+      if(trimmed.startsWith('### ')){
+        out.push(`<h3 style="color:var(--acc);font-size:14px;margin:18px 0 8px;border-bottom:1px solid var(--bd2);padding-bottom:4px">${formatInline(trimmed.substring(4))}</h3>`);
+      } else if(trimmed.startsWith('## ')){
+        out.push(`<h2 style="color:var(--ai);font-size:15px;margin:20px 0 8px;border-bottom:1px solid var(--aiborder);padding-bottom:5px">${formatInline(trimmed.substring(3))}</h2>`);
+      } else if(trimmed.startsWith('# ')){
+        out.push(`<h1 style="color:var(--tx1);font-size:17px;margin:22px 0 10px">${formatInline(trimmed.substring(2))}</h1>`);
+      } else {
+        out.push(formatInline(l));
+      }
+    }
+  }
+  if(inTable){
+    flushTable();
+  }
+  return out.join('\n');
+}
+
 function renderDriftReportSuccess(response){
   window._lastDriftReport = response;
   const telem = window._lastGeminiTelemetry || {};
   const latSec = telem.latencyMs ? (telem.latencyMs / 1000).toFixed(2) + 's' : 'verified';
+  const hasVision = !!(window._observedFrame && window._observedFrame.data);
   
   document.getElementById('drift-results').style.display = 'block';
   document.getElementById('drift-results').innerHTML = `
@@ -1363,7 +1694,7 @@ function renderDriftReportSuccess(response){
       <div class="fc g8" style="align-items:center">
         <span style="font-size:18px">🟢</span>
         <div>
-          <div style="font-weight:700;color:var(--ok);font-size:13px">Live Google Gemini Cloud Response Verified</div>
+          <div style="font-weight:700;color:var(--ok);font-size:13px">Live Google Gemini Cloud Response Verified ${hasVision ? '· 🖼️ Multimodal Vision Active' : ''}</div>
           <div style="font-size:11px;color:var(--tx2)">100% computed live via Google Gemini Cloud API · Zero local canned templates</div>
         </div>
       </div>
@@ -1377,31 +1708,35 @@ function renderDriftReportSuccess(response){
 
     <div class="card ai-card">
       <div class="fb" style="margin-bottom:8px">
-        <div class="ctitle ai-ctitle" style="margin-bottom:0">Scene Flow, Geometry & Consistency Audit</div>
+        <div class="ctitle ai-ctitle" style="margin-bottom:0">Sequential State Matrix & Constraint Audit</div>
         <div class="fc g8">
           <button class="btn btn-s btn-xs" onclick="copyDriftReport(this)">📋 Copy Full Audit</button>
         </div>
       </div>
-      <div id="drift-report-body" style="font-size:13px;line-height:1.85;white-space:pre-wrap;color:var(--tx1)"></div>
+      <div id="drift-report-body" style="font-size:13px;line-height:1.8;white-space:pre-wrap;color:var(--tx1)"></div>
     </div>
     <div class="fc g10" style="margin-top:12px">
       <button class="btn btn-copy" onclick="copyDriftReport(this)">📋 Copy Full Audit Report</button>
     </div>
   `;
-  document.getElementById('drift-report-body').textContent = response;
+  const reportBody = document.getElementById('drift-report-body');
+  if(reportBody){
+    reportBody.innerHTML = formatDriftReportMarkdown(response);
+  }
 }
 
 // ═══════════════════════════════════════
-// DRIFT DETECTOR (AI)
+// DRIFT DETECTOR & STATE-TRACKING ENGINE (AI)
 // ═══════════════════════════════════════
 async function runDriftDetect(){
   const scriptTextRaw = document.getElementById('drift-script')?.value.trim() || '';
   const s1Raw = document.getElementById('drift-s1').value.trim();
   const s2Raw = document.getElementById('drift-s2').value.trim();
   const s3Raw = document.getElementById('drift-s3').value.trim();
+  const observedFrame = window._observedFrame || null;
 
-  if(!s1Raw && !s2Raw && !s3Raw && !scriptTextRaw){
-    alert('Please paste at least one scene prompt or screenplay text to audit.');
+  if(!s1Raw && !s2Raw && !s3Raw && !scriptTextRaw && !observedFrame){
+    alert('Please provide at least one scene prompt, screenplay text, or generated frame/video to audit.');
     return;
   }
 
@@ -1414,7 +1749,7 @@ async function runDriftDetect(){
   const activeModel = getModel() || 'gemini-3.1-flash-lite';
   const msg = document.getElementById('drift-msg');
   msg.style.color = 'var(--acc)';
-  msg.textContent = `🔍 Sending live query to Google Gemini Cloud (${activeModel})…`;
+  msg.textContent = `🔍 Sending live query to Google Gemini Cloud (${activeModel})${observedFrame ? ' with Vision Frame…' : '…'}`;
 
   // Render live connecting card in drift-results immediately
   const resultsEl = document.getElementById('drift-results');
@@ -1424,7 +1759,7 @@ async function runDriftDetect(){
       <div style="display:inline-block;width:34px;height:34px;border:3px solid var(--aiborder);border-top-color:var(--ai);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:14px"></div>
       <div style="font-size:15px;font-weight:700;color:var(--ai)">Connecting to Google Gemini Cloud API...</div>
       <div style="font-size:12px;color:var(--tx2);margin-top:6px">
-        Analyzing physical kinematics, room geometry, screenplay cast and appearance consistency on <strong>${activeModel}</strong>...
+        Auditing physical state tracking, room compass graph, anatomical coordinates, and kinematics on <strong>${activeModel}</strong>${observedFrame ? ' with Multimodal Vision' : ''}...
       </div>
       <div style="font-size:11px;color:var(--tx2);margin-top:10px;opacity:0.75">
         (Live HTTP call to generativelanguage.googleapis.com · Zero local templates)
@@ -1447,105 +1782,140 @@ async function runDriftDetect(){
   const allSceneText = (s1Raw + ' ' + s2Raw + ' ' + (s3Raw||'') + ' ' + scriptText).toUpperCase();
   const bibleCtx = cleanBibleCtx(d.chars, allSceneText);
 
+  // Read spatial anchor graph and compass settings
+  const roomName = document.getElementById('drift-room-name')?.value.trim() || '';
+  const camCoord = document.getElementById('drift-cam-coord')?.value.trim() || '';
+  const anchorNorth = document.getElementById('drift-anchor-north')?.value.trim() || '';
+  const anchorEast = document.getElementById('drift-anchor-east')?.value.trim() || '';
+  const anchorSouth = document.getElementById('drift-anchor-south')?.value.trim() || '';
+  const anchorWest = document.getElementById('drift-anchor-west')?.value.trim() || '';
+
+  let spatialGraphSection = '';
+  if(roomName || camCoord || anchorNorth || anchorEast || anchorSouth || anchorWest){
+    spatialGraphSection = `FIXED SPATIAL ANCHOR GRAPH & COMPASS COORDINATE SYSTEM:\n` +
+      `- ROOM / SET: ${roomName || 'Established set'}\n` +
+      `- CAMERA POSITION & HEADING: ${camCoord || 'Camera frame coordinates'}\n` +
+      `- NORTH WALL [ANCHOR_01]: ${anchorNorth || 'Unspecified anchor'}\n` +
+      `- EAST WALL [ANCHOR_02]: ${anchorEast || 'Unspecified anchor'}\n` +
+      `- SOUTH WALL [ANCHOR_03]: ${anchorSouth || 'Unspecified anchor'}\n` +
+      `- WEST WALL [ANCHOR_04]: ${anchorWest || 'Unspecified anchor'}\n\n`;
+  }
+
   const scriptSection = scriptText 
     ? `ORIGINAL SCREENPLAY SCENE (SCRIPT GROUND TRUTH REFERENCE):\n${scriptText}\n\n`
     : '';
 
-  let handoffContext = '';
-  if(s1 && s2){
-    handoffContext = `SCENE SEQUENCE & HANDOFF CONTEXT:\n1. [LAST GENERATED SCENE]: The video shot that was ALREADY generated. It establishes the unyielding physical ground truth: characters' exact ending coordinates, body orientation, hand grips, room geometry, prop resting states, micro-accessories, grooming states, and emotional momentum.\n2. [UPCOMING NEXT SCENE]: The video shot the filmmaker is ABOUT TO GENERATE next. It MUST pick up seamlessly from where the Last Generated Scene left off with ZERO physical illogic, no spatial teleports, no swapped hands, no grooming amnesia, and no character drift.\n`;
-  } else if(scenes.length){
-    handoffContext = `SCENE AUDIT CONTEXT:\n[SCENE PROMPT]: The video shot prompt the filmmaker is preparing to generate. Analyze it thoroughly against the Screenplay and Character Bible for complete internal physical plausibility, spatial consistency, cast fidelity, appearance consistency, and cinematic natural flow.\n`;
+  let visualNote = '';
+  if(observedFrame){
+    visualNote = `[OBSERVED FRAME ATTACHED — MULTIMODAL GROUND TRUTH]:\n` +
+      `The user uploaded the actual rendered video frame / image from the previous shot (${observedFrame.fileName || 'previous frame'}).\n` +
+      `Inspect this image directly with Gemini Vision. Compare what is OBSERVED in the rendered image against what was INTENDED in the Character Bible and screenplay.\n` +
+      `If the rendered image shows an asymmetrical marker (e.g. scar, tattoo, watch, parting) on a different anatomical side, or with different clothing colors or room background, flag this observed state immediately to prevent compounding continuity drift!\n\n`;
   }
 
-  const prompt = `You are a legendary television continuity supervisor, script supervisor, and cinematic director with an obsessive eye for visual consistency, physical plausibility, and realistic human kinetics.
-Conduct an uncompromising, in-depth, microscopic continuity and scene-flow audit. 
-DO NOT rewrite the entire scene prompt. Your task is strictly to AUDIT, FLAG every discrepancy, and tell the filmmaker EXACTLY what changes to make in their prompt so the upcoming generation achieves 100% flawless continuity and natural flow.
+  const prompt = `You are an elite television continuity supervisor, spatial director, and cinematic state-tracking auditor.
+Stop treating continuity as merely a vague "prompt-comparison" problem. Treat it as a strict PHYSICAL STATE-TRACKING and CONSTRAINT-VALIDATION SYSTEM.
+Conduct an uncompromising, microscopic continuity audit across the immutable state, observed visual state, and proposed shot state.
 
-CRITICAL DIRECTIVE — EXHAUSTIVE DEEP-DIVE INVESTIGATION (NO RUSHED OR SURFACE-LEVEL BULLETS):
-- Do NOT provide a brief, generic, or rushed overview.
-- Perform a thorough, beat-by-beat examination of the screenplay text and every scene prompt provided.
-- Dissect every character's exact physical coordinates, body mechanics, prop resting states, eyelines, and cast roster with surgical precision.
-- Cite exact phrases and details from the inputs to substantiate every single observation.
+DO NOT rewrite the entire scene prompt into a new full prompt. Your task is strictly to AUDIT, FLAG every discrepancy, validate constraints, and tell the filmmaker EXACTLY what changes to make in their prompt so the upcoming generation achieves 100% flawless flow and physical reality.
 
-${handoffContext}${scriptText ? 'ORIGINAL SCREENPLAY SCENE: Dramatic narrative ground truth from the script.\n\n' : ''}MICROSCOPIC AUDIT DIRECTIVES ("FLAG WHAT NEEDS TO BE FIXED"):
-1. HUMAN POSITION LOGIC & KINEMATICS ("A CHARACTER CANNOT MOVE HERE AND THERE INSTANTLY"):
-   - Real-world human movement physics: Human beings have physical mass, weight, inertia, and finite travel speeds (~3 to 4 feet per second for a normal walk). A character CANNOT teleport, slide, or instantly dart across spaces.
-   - Time-to-Distance Plausibility: In a short shot or across an immediate continuous cut, a character cannot move from a doorway to sitting behind a desk 15 feet away without physical footsteps and elapsed traversal time. Flag any impossible distance traversal or instant repositioning!
-   - Posture Transition Mechanics: A character cannot instantly snap between posture states (e.g. from kneeling on the floor to standing upright, or from seated in an armchair to leaning over a balcony) without the physical kinetic motion of standing up and walking there. Flag any abrupt posture snap lacking transitional kinematics.
-   - Relational Distance & Proximity: If Character A is standing 1 foot away from Character B, Character A cannot suddenly be 8 feet away in the reverse angle or next shot unless one of them physically stepped back.
-   - Screen-Left / Screen-Right Invariance & 180° Rule: Characters cannot swap sides of the screen (screen-left vs screen-right) unless they physically walk across each other or the camera crosses the line of action.
-   - Biomechanical Locomotion: Forbid unnatural sliding across floors, floating feet, skating motion, or instant snapping of coordinates. Every movement must involve footsteps, body weight transfer, hip pivots, and realistic acceleration/deceleration.
-
-2. CAST ROSTER & SCRIPT FIDELITY (CRITICAL CHECK):
-   - Cross-check EVERY character in the Original Screenplay against the scene prompt(s).
-   - If a character called for in the script (for example: TEEN Evelyn, a flashback younger self, a co-star, or an extra) is missing or omitted in the user's prompt, YOU MUST EXPLICITLY FLAG THIS!
-   - Ensure distinct age variants (e.g. Adult Evelyn vs TEEN Evelyn) have their exact age-appropriate styling, face, and wardrobe explicitly distinguished.
-
-3. EYE COLOR & IRIS INVARIANCE LOCKS:
-   - Flag any missing iris color lock or risk of eye color drift (e.g. if Evelyn has warm brown eyes, flag if not specified so the AI video generator doesn't alter them to blue, green, or hazel).
-
-4. DIALOGUE & LANGUAGE AUDIO (ZERO CHINESE):
-   - Flag any risk of the AI video generator hallucinating Chinese speech, Mandarin dialogue, or Hanzi subtitles. Mandate strict 100% English spoken delivery.
-
-5. MINUTE DETAILS & PHYSICAL CAUSALITY:
-   - Flag props that magically moved without being touched, switched hands, swapped shoulders, jewelry/watches moving wrists, altered hair parting/dampness, or wardrobe state changes.
-
-6. NATURAL HUMAN FLOW & PACING:
-   - Flag any robotic stiffness, frantic unnatural pacing, or unmotivated hyper-accelerated motion that ruins the scene's organic human momentum.
-
-${scriptSection}CHARACTER BIBLE GROUND TRUTH:
+${visualNote}${spatialGraphSection}${scriptSection}IMMUTABLE CHARACTER BIBLE GROUND TRUTH (Canonical State):
 ${bibleCtx}
 
-DRAMAGIC SCENE PROMPTS TO AUDIT:
-${scenes.map(s => `${s.label}:\n${s.text}`).join('\n\n---\n\n')}
+DRAMAGIC SHOT PROMPTS:
+${scenes.length ? scenes.map(s => `${s.label}:\n${s.text}`).join('\n\n---\n\n') : '(No prompt text entered; audit from visual frame and script)'}
 
-REPORT FORMAT REQUIRED (Strictly provide these 4 structured sections; DO NOT generate a full prompt rewrite):
+MANDATORY CONTINUITY CONSTRAINTS & AUDIT RULES:
 
-• ⚠️ 1. CONTINUITY & PHYSICAL LOGIC DISCREPANCIES FLAGGED
-(Itemize every specific mismatch: instant character displacements/teleports, impossible posture jumps, missing characters like TEEN Evelyn, prop amnesia, handedness/shoulder switches, hair/wardrobe discrepancies, and camera axis violations)
+1. INTENDED STATE vs. OBSERVED STATE:
+   - "Intended State": What the screenplay and Character Bible declare should exist.
+   - "Observed State": What actually appeared in the generated image/video frame (if attached) or what was established in the previous shot.
+   - When Intended and Observed disagree (e.g. prompt said left shoulder, but image shows right shoulder), FLAG THIS DISAGREEMENT explicitly! Never allow silent drift.
 
-• 🚶 2. CHARACTER POSITION & HUMAN KINEMATICS AUDIT
-(Dissect character positions using realistic human physics: travel distance vs time elapsed, posture transition realism, relational proximity between characters, screen-left/right anchoring, and forbidding sliding/floating movements)
+2. ANATOMICAL LEFT/RIGHT vs. SCREEN-LEFT/RIGHT (NEVER AMBIGUOUS):
+   - Never use "left" or "right" without specifying anatomical vs screen coordinates:
+     • Character's anatomical left/right (permanently attached to their body)
+     • Screen-left/right (camera viewpoint dependent)
+   - Rule: When a character faces the camera, their Anatomical Left is Screen-Right. When they face away, their Anatomical Left is Screen-Left.
+   - All body markers (scars, birthmarks, tattoos, hair partings, wristwatches) MUST remain anchored to their fixed anatomical side.
 
-• 👁️ 3. EYE COLOR & AUDIO INTEGRITY WARNINGS
-(Flag iris/eye color drift risks, and enforce 100% English spoken dialogue while suppressing Chinese/Mandarin audio and Hanzi subtitles)
+3. MIRROR DETECTION RULE (HARD VALIDATOR):
+   - If any asymmetrical marker (scar, tattoo, hair parting, eye patch, watch, injury) swaps anatomical sides, classify immediately as:
+     🔴 CRITICAL CONTINUITY ERROR — IDENTITY MARKER MIRRORED
+   - Stop generation until resolved.
+   - Continuity Error Severity Tiers:
+     🔴 Critical: Identity marker mirrored (scar/parting switches sides), character identity switch, room layout flipped, door/window moved to a different compass wall.
+     🟠 Major: Character suddenly teleports across room or switches side of table without walking; prop magically disappears or switches hands.
+     🟡 Moderate: Wardrobe detail or color variance.
+     🟢 Minor: Natural ambient lighting/weather variation.
 
-• 🎯 4. WHAT TO ADJUST FOR 100% CONSISTENCY ("Kya Kya Karne Se Ekdam Consistency Aayega")
-(Provide a clear, high-impact, actionable point-by-point checklist of exact adjustments the filmmaker needs to make in their prompt so the generation makes complete sense, obeys human movement physics, and maintains flawless continuity)`;
+4. SPATIAL ANCHORS & COMPASS ROOM GEOMETRY:
+   - Check against established room walls (North, East, South, West) and anchors (ANCHOR_01 to ANCHOR_04).
+   - Furniture and fixtures must not change walls. Character headings must match camera angles.
+
+5. HUMAN KINEMATICS & TRAVERSAL PLAUSIBILITY ("A CHARACTER CANNOT MOVE HERE AND THERE INSTANTLY"):
+   - Real-world human movement physics: Human beings have physical mass and travel ~3 to 4 feet per second for a normal walk.
+   - In immediate cuts or short shots, characters CANNOT teleport, slide, or instantly cross distances without physical footsteps and elapsed traversal time.
+   - Posture Transition Mechanics: A character cannot instantly snap from kneeling/sitting to standing upright without the kinetic motion of standing up first.
+   - Relational Distance: Proximity between characters cannot jump without physical movement.
+   - Forbid unnatural sliding across floors, skating motion, or floating feet.
+
+6. CAST ROSTER & SCRIPT FIDELITY:
+   - Cross-check every character in the Original Screenplay (e.g. TEEN Evelyn, flashback younger self, co-stars). If missing in the prompt, flag explicitly!
+
+7. IRIS / EYE COLOR INVARIANCE & AUDIO DELIVERY:
+   - Verify eye colors are permanently locked to prevent random model color drift.
+   - Mandate 100% English spoken delivery; strictly suppress Chinese/Mandarin audio and Hanzi subtitles.
+
+REPORT FORMAT REQUIRED (Strictly provide these 4 structured sections):
+
+### 📊 1. STRUCTURED CONTINUITY STATE MATRIX
+Present a clean, high-precision markdown table comparing:
+| Element / Character / Prop | Intended Canonical State (Bible/Script) | Observed State (Previous Shot/Frame) | Proposed Next Shot State | Status & Constraint Audit |
+(Include characters, anatomical markers/scars, hair partings, wardrobe, positions, and room anchors)
+
+### 🔄 2. MIRROR DETECTION & SPATIAL ANCHOR AUDIT (HARD CONSTRAINTS)
+(Itemize anatomical vs screen coordinates, mirror rule checks, and compass anchor adherence. Explicitly label findings using Severity Tiers: 🔴 Critical, 🟠 Major, 🟡 Moderate, 🟢 Minor)
+
+### 🚶 3. CHARACTER POSITION & HUMAN KINEMATICS AUDIT
+(Dissect character positions using realistic human physics: travel distance vs elapsed traversal time, posture transition realism, relational proximity between subjects, screen-left/right anchoring, and forbidding sliding/floating movements)
+
+### 📜 4. CONTINUITY CONTRACT & PROMPT ADJUSTMENTS ("Kya Kya Karna Chahiye")
+(Provide a clear, high-impact, actionable point-by-point checklist of exact adjustments the filmmaker needs to make in their prompt so the upcoming generation achieves 100% flawless flow, obeys human kinematics, and preserves complete visual fidelity)`;
 
   try {
     const response = await gemini(
       prompt,
-      'You are a premier television script supervisor and cinematic continuity director. You audit scene flow, flag inconsistencies and unnatural character movements with microscopic human physics precision, and provide clear actionable instructions for flawless visual continuity. All content is fictional creative screenwriting.',
-      0.35
+      'You are a premier television script supervisor and cinematic continuity director. You audit scene flow, validate physical state tracking, enforce anatomical coordinate rules, and provide clear actionable instructions for flawless visual continuity. All content is fictional creative screenwriting.',
+      0.35,
+      observedFrame
     );
     if(!response || !response.trim()){
-      throw new Error('Gemini 3.1 Flash returned an empty response. Please verify your prompt content.');
+      throw new Error('Gemini returned an empty response. Please verify your prompt content.');
     }
     renderDriftReportSuccess(response);
     msg.style.color = 'var(--ok)';
-    msg.textContent = '✅ Scene flow analysis complete (' + (window._lastGeminiTelemetry?.model || activeModel) + ')';
+    msg.textContent = '✅ Continuity state audit complete (' + (window._lastGeminiTelemetry?.model || activeModel) + ')';
   } catch(e) {
-    console.error('Gemini 3.1 Flash Error:', e);
+    console.error('Gemini Drift Error:', e);
     msg.style.color = 'var(--err)';
     msg.textContent = '✗ ' + (e.message || 'Error occurred');
 
     document.getElementById('drift-results').style.display = 'block';
     document.getElementById('drift-results').innerHTML = `
-      <div class="status err">✗ Gemini 3.1 Flash API Error: ${escH(e.message)}</div>
+      <div class="status err">✗ Gemini API Error: ${escH(e.message)}</div>
       <div class="card" style="border-left:3px solid var(--err)">
-        <div class="ctitle" style="color:var(--err)">Gemini 3.1 Flash Execution Failed</div>
+        <div class="ctitle" style="color:var(--err)">Gemini Execution Failed</div>
         <p style="font-size:13px;line-height:1.7;color:var(--tx1)">
-          Gemini 3.1 Flash could not generate the report due to the following reason:<br>
+          Gemini could not generate the continuity report due to the following reason:<br>
           <strong style="color:var(--err)">${escH(e.message)}</strong>
         </p>
         <div style="font-size:12px;color:var(--tx2);margin-top:12px;line-height:1.6">
           <strong>Troubleshooting Tips:</strong>
           <ul style="margin:6px 0 0 16px;padding:0">
             <li>Verify your API Key in <strong>Settings → AI Configuration</strong>.</li>
-            <li>Ensure model <code>gemini-3.1-flash-lite</code> is active.</li>
-            <li>If the error mentions PROHIBITED_CONTENT, check if your scene text has violent or sensitive terms.</li>
+            <li>Ensure model <code>gemini-3.1-flash-lite</code> or <code>gemini-2.5-flash</code> is active.</li>
+            <li>If the error mentions PROHIBITED_CONTENT, check if your scene text has sensitive terms.</li>
           </ul>
         </div>
       </div>
