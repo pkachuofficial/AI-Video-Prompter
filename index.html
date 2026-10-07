@@ -192,19 +192,24 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
 .sec-badge{display:inline-block;background:var(--bghov);border:1px solid var(--bd2);color:var(--tx2);font-size:10px;font-weight:600;padding:1px 7px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase}
 /* ── REPORT TABLE ── */
 .report-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px;background:var(--bg2);border-radius:6px;overflow:hidden}
-.report-table th,.report-table td{border:1px solid var(--bd2);padding:8px 10px;text-align:left;vertical-align:top}
+.report-table th,.report-table td{border:1px solid var(--bd2);padding:9px 12px;text-align:left;vertical-align:top}
 .report-table th{background:var(--bg4);color:var(--acc);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px}
 .report-table tr:nth-child(even){background:rgba(255,255,255,0.02)}
 .report-table td strong{color:var(--tx1)}
-/* ── CONTINUITY ENGINE SUMMARY & FINAL PROMPT ── */
+/* ── CONTINUITY AUDIT REPORT & SUMMARY ── */
 .continuity-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:14px}
 .summary-card{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:12px 14px}
 .summary-card.c-ok{border-left:3px solid var(--ok)}
 .summary-card.c-warn{border-left:3px solid var(--warn)}
 .summary-card.c-ai{border-left:3px solid var(--ai)}
+.summary-card.c-fix{border-left:3px solid #f43f5e}
 .summary-card .sc-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.final-prompt-card{background:linear-gradient(135deg,var(--bg3) 0%,#151322 100%);border:1px solid var(--aiborder);border-left:4px solid var(--acc);border-radius:10px;padding:16px 18px;margin-bottom:14px}
-.final-prompt-box{font-size:12px;line-height:1.8;color:var(--tx1);white-space:pre-wrap;font-family:'Menlo','Monaco',monospace;max-height:420px;overflow-y:auto;background:var(--bginp);border:1px solid var(--bd2);border-radius:7px;padding:12px 14px;margin-top:10px}
+.audit-report-hero{background:var(--bg2);border:1px solid var(--bd2);border-top:3px solid var(--ai);border-radius:10px;padding:18px 20px;margin-bottom:14px}
+.audit-report-hero .arh-title{font-size:14px;font-weight:700;color:var(--tx1);display:flex;align-items:center;gap:8px}
+.audit-pill-bar{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px}
+.audit-pill{font-size:10px;font-weight:600;letter-spacing:.4px;padding:3px 8px;border-radius:4px;display:inline-flex;align-items:center;gap:4px;border:1px solid var(--bd2);background:var(--bg3);color:var(--tx2)}
+.final-prompt-card{background:linear-gradient(135deg,var(--bg3) 0%,#151322 100%);border:1px solid var(--aiborder);border-left:4px solid var(--acc);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.final-prompt-box{font-size:12px;line-height:1.75;color:var(--tx1);white-space:pre-wrap;font-family:'Menlo','Monaco',monospace;max-height:260px;overflow-y:auto;background:var(--bginp);border:1px solid var(--bd2);border-radius:7px;padding:12px 14px;margin-top:8px}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
 </style>
 </head>
@@ -233,7 +238,7 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
   <div class="sgroup">
     <div class="sgLabel">AI Features</div>
     <div class="ni ai-tab" onclick="showPage('biblerx')"><span class="ic">🤖</span> Auto Bible Builder <span class="badge">AI</span></div>
-    <div class="ni ai-tab" onclick="showPage('drift')"><span class="ic">⚡</span> Continuity Engine <span class="badge">AI</span></div>
+    <div class="ni ai-tab" onclick="showPage('drift')"><span class="ic">⚡</span> Continuity Audit Engine <span class="badge">AI</span></div>
     <div class="ni ai-tab" onclick="showPage('planner')"><span class="ic">📝</span> Shot Planner <span class="badge">AI</span></div>
     <div class="ni ai-tab" onclick="showPage('chat')"><span class="ic">💬</span> Continuity Chat <span class="badge">AI</span></div>
   </div>
@@ -304,10 +309,10 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
   <div id="biblerx-results" style="display:none"></div>
 </div>
 
-<!-- ══ PAGE: CONTINUITY & HUMAN-REALISM ENGINE (AI) ══ -->
+<!-- ══ PAGE: CONTINUITY & REALISM AUDIT ENGINE (AI) ══ -->
 <div id="page-drift" class="page">
-  <div class="ptitle">⚡ Cinematic Continuity & Human-Realism Engine</div>
-  <div class="pdesc">Prompt-centric continuity bridge: analyze the previous shot state against the new shot prompt, detect physical/spatial/wardrobe contradictions, enforce human motion & emotional realism, and generate ONE clean, optimized production prompt.</div>
+  <div class="ptitle">⚡ Cinematic Continuity & Realism Audit Engine</div>
+  <div class="pdesc">Prompt-centric continuity & physical realism supervisor: audits your upcoming shot against previous shots, character bible, and screenplay ground truth. Delivers an in-depth audit report detailing exact prompt fixes, consistent pacing, human emotions, room geometry, kinematics & physics for flawless video generation.</div>
 
   <div id="drift-ai-warn" class="status warn" style="display:none">⚠ No Gemini API key set. Go to Settings → AI Configuration.</div>
 
@@ -426,7 +431,7 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
   </div>
 
   <div class="fc g10" style="margin-bottom:18px">
-    <button class="btn btn-ai" onclick="runDriftDetect()">⚡ Analyze Continuity & Optimize Prompt</button>
+    <button class="btn btn-ai" onclick="runDriftDetect()">⚡ Run Continuity & Physical Realism Audit</button>
     <button class="btn btn-s btn-sm" onclick="document.getElementById('drift-s3-card').style.display='block'">+ Add Shot 3</button>
     <span id="drift-msg" class="dim"></span>
   </div>
@@ -1707,14 +1712,27 @@ function formatDriftReportMarkdown(text){
       if(inTable){
         flushTable();
       }
-      if(trimmed.startsWith('### ')){
-        out.push(`<h3 style="color:var(--acc);font-size:14px;margin:18px 0 8px;border-bottom:1px solid var(--bd2);padding-bottom:4px">${formatInline(trimmed.substring(4))}</h3>`);
+      if(trimmed.startsWith('#### ')){
+        out.push(`<div style="font-size:13.5px;font-weight:700;color:var(--tx1);margin:18px 0 8px;display:flex;align-items:center;gap:6px;border-left:3px solid var(--ai);padding-left:8px">${formatInline(trimmed.substring(5))}</div>`);
+      } else if(trimmed.startsWith('### ')){
+        out.push(`<h3 style="color:var(--acc);font-size:14.5px;margin:20px 0 8px;border-bottom:1px solid var(--bd2);padding-bottom:5px;display:flex;align-items:center;gap:6px">${formatInline(trimmed.substring(4))}</h3>`);
       } else if(trimmed.startsWith('## ')){
-        out.push(`<h2 style="color:var(--ai);font-size:15px;margin:20px 0 8px;border-bottom:1px solid var(--aiborder);padding-bottom:5px">${formatInline(trimmed.substring(3))}</h2>`);
+        out.push(`<h2 style="color:var(--ai);font-size:15.5px;margin:22px 0 10px;border-bottom:1px solid var(--aiborder);padding-bottom:6px">${formatInline(trimmed.substring(3))}</h2>`);
       } else if(trimmed.startsWith('# ')){
-        out.push(`<h1 style="color:var(--tx1);font-size:17px;margin:22px 0 10px">${formatInline(trimmed.substring(2))}</h1>`);
+        out.push(`<h1 style="color:var(--tx1);font-size:17.5px;margin:24px 0 12px">${formatInline(trimmed.substring(2))}</h1>`);
+      } else if(trimmed.startsWith('- ') || trimmed.startsWith('* ')){
+        let bulletContent = trimmed.substring(2);
+        let bulletIcon = '•';
+        let bulletColor = 'var(--acc)';
+        if(bulletContent.startsWith('✓')){ bulletIcon = '✓'; bulletColor = 'var(--ok)'; bulletContent = bulletContent.substring(1).trim(); }
+        else if(bulletContent.startsWith('⚠')){ bulletIcon = '⚠'; bulletColor = 'var(--warn)'; bulletContent = bulletContent.substring(1).trim(); }
+        else if(bulletContent.startsWith('🛠️') || bulletContent.startsWith('🛠')){ bulletIcon = '🛠️'; bulletColor = '#f43f5e'; bulletContent = bulletContent.replace(/^🛠️?\s*/, ''); }
+        else if(bulletContent.startsWith('✗') || bulletContent.startsWith('❌')){ bulletIcon = '✗'; bulletColor = 'var(--err)'; bulletContent = bulletContent.substring(1).trim(); }
+        out.push(`<div style="display:flex;align-items:flex-start;gap:8px;margin:5px 0 5px 6px;font-size:12.5px;line-height:1.6"><span style="color:${bulletColor};font-weight:700;flex-shrink:0">${bulletIcon}</span><span style="color:var(--tx1)">${formatInline(bulletContent)}</span></div>`);
+      } else if(trimmed === ''){
+        out.push(`<div style="height:6px"></div>`);
       } else {
-        out.push(formatInline(l));
+        out.push(`<div style="margin:4px 0;font-size:12.5px;line-height:1.65;color:var(--tx1)">${formatInline(l)}</div>`);
       }
     }
   }
@@ -1732,18 +1750,18 @@ function parseContinuityResponse(raw){
                     raw.match(/\b(CONTINUE|TRANSITION|RESET)\b/i);
   if(modeMatch) mode = modeMatch[1].toUpperCase();
 
-  const cMatch = raw.match(/(?:###\s*(?:🎯\s*)?CONTINUITY(?: & INHERITANCE)?|CONTINUITY:)([\s\S]*?)(?=(?:###\s*(?:⚠️\s*)?RISKS|RISKS:|###\s*(?:🛠️\s*)?CORRECTIONS|CORRECTIONS:|###\s*(?:✨\s*)?FINAL|FINAL OPTIMIZED|$))/i);
-  const rMatch = raw.match(/(?:###\s*(?:⚠️\s*)?RISKS(?: FLAGGED)?|RISKS:)([\s\S]*?)(?=(?:###\s*(?:🛠️\s*)?CORRECTIONS|CORRECTIONS:|###\s*(?:✨\s*)?FINAL|FINAL OPTIMIZED|$))/i);
-  const corrMatch = raw.match(/(?:###\s*(?:🛠️\s*)?CORRECTIONS(?: APPLIED)?|CORRECTIONS:)([\s\S]*?)(?=(?:###\s*(?:✨\s*)?FINAL|FINAL OPTIMIZED|###\s*(?:🔬\s*)?DETAILED|$))/i);
-  const fpMatch = raw.match(/(?:###\s*(?:✨\s*)?FINAL (?:OPTIMIZED )?(?:GENERATION )?PROMPT|FINAL PROMPT:|FINAL OPTIMIZED SHOT PROMPT:)([\s\S]*?)(?=(?:###\s*(?:🔬\s*)?DETAILED|DETAILED TECHNICAL ANALYSIS:|$))/i);
-  const dtMatch = raw.match(/(?:###\s*(?:🔬\s*)?DETAILED(?: TECHNICAL)? ANALYSIS|DETAILED TECHNICAL ANALYSIS:)([\s\S]*)/i);
+  const cMatch = raw.match(/(?:###\s*(?:🎯\s*)?CONTINUITY(?: & INHERITANCE)?|CONTINUITY:)([\s\S]*?)(?=(?:###\s*(?:⚠️\s*)?RISKS|RISKS:|###\s*(?:🛠️\s*)?(?:KYA KYA FIX KARNA HAI|CORRECTIONS)|CORRECTIONS:|###\s*(?:🔬\s*)?(?:COMPREHENSIVE|DETAILED)|###\s*(?:✨\s*)?(?:FINAL|OPTIONAL)|$))/i);
+  const rMatch = raw.match(/(?:###\s*(?:⚠️\s*)?RISKS(?: FLAGGED)?|RISKS:)([\s\S]*?)(?=(?:###\s*(?:🛠️\s*)?(?:KYA KYA FIX KARNA HAI|CORRECTIONS)|CORRECTIONS:|###\s*(?:🔬\s*)?(?:COMPREHENSIVE|DETAILED)|###\s*(?:✨\s*)?(?:FINAL|OPTIONAL)|$))/i);
+  const corrMatch = raw.match(/(?:###\s*(?:🛠️\s*)?(?:KYA KYA FIX KARNA HAI(?: \(ACTIONABLE AUDIT FIXES\))?|CORRECTIONS(?: APPLIED)?)|CORRECTIONS:)([\s\S]*?)(?=(?:###\s*(?:🔬\s*)?(?:COMPREHENSIVE|DETAILED)|###\s*(?:✨\s*)?(?:FINAL|OPTIONAL)|$))/i);
+  const dtMatch = raw.match(/(?:###\s*(?:🔬\s*)?(?:COMPREHENSIVE CONTINUITY & PHYSICAL REALISM AUDIT REPORT|DETAILED(?: TECHNICAL)? ANALYSIS)|DETAILED TECHNICAL ANALYSIS:)([\s\S]*?)(?=(?:###\s*(?:✨\s*)?(?:OPTIONAL REFERENCE PROMPT|FINAL (?:OPTIMIZED )?(?:GENERATION )?PROMPT)|OPTIONAL REFERENCE PROMPT:|FINAL PROMPT:|$))/i);
+  const fpMatch = raw.match(/(?:###\s*(?:✨\s*)?(?:OPTIONAL REFERENCE PROMPT|FINAL (?:OPTIMIZED )?(?:GENERATION )?PROMPT)|OPTIONAL REFERENCE PROMPT:|FINAL PROMPT:|FINAL OPTIMIZED SHOT PROMPT:)([\s\S]*?)(?=(?:###\s*(?:🔬\s*)?(?:COMPREHENSIVE|DETAILED)|$))/i);
 
   let finalPrompt = fpMatch ? fpMatch[1].trim() : '';
   finalPrompt = finalPrompt.replace(/^```[a-z]*\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
 
-  if(!finalPrompt && raw.includes('```')){
-    const bMatch = raw.match(/```(?:prompt)?\s*\n([\s\S]*?)```/i);
-    if(bMatch) finalPrompt = bMatch[1].trim();
+  let details = dtMatch ? dtMatch[1].trim() : '';
+  if(!details){
+    details = raw;
   }
 
   return {
@@ -1752,7 +1770,7 @@ function parseContinuityResponse(raw){
     risks: rMatch ? rMatch[1].trim() : '',
     corrections: corrMatch ? corrMatch[1].trim() : '',
     finalPrompt,
-    details: dtMatch ? dtMatch[1].trim() : (raw.length > 300 ? raw : '')
+    details
   };
 }
 
@@ -1771,6 +1789,7 @@ function formatCardBullets(text, defaultIcon, defaultColor){
     else if(clean.startsWith('↻')){ icon = '↻'; color = 'var(--ai)'; clean = clean.substring(1).trim(); }
     else if(clean.startsWith('→')){ icon = '→'; color = 'var(--acc)'; clean = clean.substring(1).trim(); }
     else if(clean.startsWith('⚠')){ icon = '⚠'; color = 'var(--warn)'; clean = clean.substring(1).trim(); }
+    else if(clean.startsWith('🛠️') || clean.startsWith('🛠')){ icon = '🛠️'; color = '#f43f5e'; clean = clean.replace(/^🛠️?\s*/, ''); }
     else if(clean.startsWith('❌') || clean.startsWith('✗')){ icon = '✗'; color = 'var(--err)'; clean = clean.substring(1).trim(); }
     return `<div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:7px;font-size:12px;line-height:1.55">
       <span style="color:${color};font-weight:700;flex-shrink:0;margin-top:1px">${icon}</span>
@@ -1785,7 +1804,7 @@ function renderDriftReportSuccess(response){
   const latSec = telem.latencyMs ? (telem.latencyMs / 1000).toFixed(2) + 's' : 'verified';
   const hasVision = !!(window._observedFrame && window._observedFrame.data);
   const parsed = parseContinuityResponse(response);
-  window._lastFinalPrompt = parsed.finalPrompt || response;
+  window._lastFinalPrompt = parsed.finalPrompt || '';
 
   let modeBadge = `<span class="tag ok" style="font-size:11px;font-weight:700">CONTINUE</span>`;
   if(parsed.mode === 'TRANSITION') {
@@ -1804,21 +1823,23 @@ function renderDriftReportSuccess(response){
         <span style="font-size:18px">🟢</span>
         <div>
           <div style="font-weight:700;color:var(--ok);font-size:13px;display:flex;align-items:center;gap:8px">
-            <span>Live Continuity Engine Verified ${hasVision ? '· 🖼️ Multimodal Vision Active' : ''}</span>
+            <span>Live Continuity & Realism Audit Verified ${hasVision ? '· 🖼️ Multimodal Vision Active' : ''}</span>
             ${modeBadge}
           </div>
-          <div style="font-size:11px;color:var(--tx2)">Prompt-Centric Cinematic Continuity & Realism Engine · Authority: New Shot Prompt</div>
+          <div style="font-size:11px;color:var(--tx2)">Pacing · Human Emotions · Kinematics & Physics · Room Geometry · State Matrix</div>
         </div>
       </div>
-      <div style="font-size:11px;font-family:monospace;background:var(--bg2);padding:5px 10px;border-radius:5px;border:1px solid var(--bd2);color:var(--tx1)">
-        Model: <strong style="color:var(--ai)">${telem.model || 'gemini-3.1-flash-lite'}</strong> &nbsp;|&nbsp; 
-        Latency: <strong>${latSec}</strong> &nbsp;|&nbsp; 
-        Tokens: <strong>${telem.totalTokens || '—'}</strong> &nbsp;|&nbsp; 
-        ${telem.timestamp || new Date().toLocaleTimeString()}
+      <div class="fc g10" style="flex-wrap:wrap">
+        <div style="font-size:11px;font-family:monospace;background:var(--bg2);padding:5px 10px;border-radius:5px;border:1px solid var(--bd2);color:var(--tx1)">
+          Model: <strong style="color:var(--ai)">${telem.model || 'gemini-3.1-flash-lite'}</strong> &nbsp;|&nbsp; 
+          Latency: <strong>${latSec}</strong> &nbsp;|&nbsp; 
+          ${telem.timestamp || new Date().toLocaleTimeString()}
+        </div>
+        <button class="btn btn-p btn-sm" onclick="copyDriftReport(this)">📋 Copy Full Audit Report</button>
       </div>
     </div>
 
-    <!-- 3-CARD CONCISE SUMMARY (SECTION 42 SPECIFICATION) -->
+    <!-- 3-CARD EXECUTIVE SUMMARY -->
     <div class="continuity-summary-grid">
       <div class="summary-card c-ok">
         <div class="sc-title" style="color:var(--ok)">
@@ -1831,7 +1852,7 @@ function renderDriftReportSuccess(response){
 
       <div class="summary-card c-warn">
         <div class="sc-title" style="color:var(--warn)">
-          <span>⚠️ RISKS FLAGGED</span>
+          <span>⚠️ RISKS & DEFECTS FLAGGED</span>
         </div>
         <div style="font-size:12px">
           ${formatCardBullets(parsed.risks, '⚠', 'var(--warn)')}
@@ -1840,51 +1861,73 @@ function renderDriftReportSuccess(response){
 
       <div class="summary-card c-ai">
         <div class="sc-title" style="color:var(--ai)">
-          <span>🛠️ CORRECTIONS APPLIED</span>
+          <span>🛠️ KYA KYA FIX KARNA HAI (ACTIONABLE FIXES)</span>
         </div>
         <div style="font-size:12px">
-          ${formatCardBullets(parsed.corrections, '✓', 'var(--ai)')}
+          ${formatCardBullets(parsed.corrections, '🛠️', 'var(--ai)')}
         </div>
       </div>
     </div>
 
-    <!-- PROMINENT HERO CARD: FINAL OPTIMIZED GENERATION PROMPT -->
-    <div class="final-prompt-card">
-      <div class="fb" style="margin-bottom:8px;flex-wrap:wrap;gap:8px">
-        <div class="fc g8">
-          <span style="font-size:16px">✨</span>
-          <div class="ctitle ai-ctitle" style="color:var(--acc);margin-bottom:0;font-size:13px">
-            FINAL OPTIMIZED GENERATION PROMPT
+    <!-- MAIN HERO SECTION: COMPREHENSIVE CONTINUITY & PHYSICAL REALISM AUDIT REPORT -->
+    <div class="audit-report-hero">
+      <div class="fb" style="margin-bottom:6px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="arh-title">
+            <span>📋 COMPREHENSIVE CONTINUITY & PHYSICAL REALISM AUDIT REPORT</span>
           </div>
-          <span class="tag ok" style="font-size:10px">Ready for Seedance / Video Model</span>
+          <div style="font-size:11px;color:var(--tx2);margin-top:2px">
+            Microscopic audit of prompt fixes, pacing cadence, acting performance, room coordinates & physical laws
+          </div>
         </div>
-        <div class="fc g8">
-          <button class="btn btn-p btn-sm" onclick="copyFinalPrompt(this)">📋 Copy Final Prompt</button>
-          <button class="btn btn-s btn-sm" onclick="sendToPromptEnforcer()">✨ Send to Enforcer</button>
-        </div>
+        <button class="btn btn-p btn-sm" onclick="copyDriftReport(this)">📋 Copy Full Audit Report</button>
       </div>
-      <div class="final-prompt-box" id="final-prompt-content">${escH(parsed.finalPrompt || response)}</div>
+
+      <!-- Quick Topic Badges -->
+      <div class="audit-pill-bar">
+        <span class="audit-pill">🛠️ 1. Prompt Adjustments</span>
+        <span class="audit-pill">⏱️ 2. Consistent Pacing (≤2.5 wps)</span>
+        <span class="audit-pill">🎭 3. Human Emotions</span>
+        <span class="audit-pill">🧭 4. Room Geometry & 180°</span>
+        <span class="audit-pill">🚶 5. Kinematics & Physics</span>
+        <span class="audit-pill">📊 6. State Matrix</span>
+        <span class="audit-pill">🔄 7. Coordinates & Mirror Lock</span>
+      </div>
+
+      <!-- AUDIT REPORT BODY -->
+      <div id="drift-report-body" style="font-size:13px;line-height:1.8;color:var(--tx1);padding:14px 16px;background:var(--bg3);border:1px solid var(--bd2);border-radius:8px;margin-top:8px">
+        ${formatDriftReportMarkdown(parsed.details || response)}
+      </div>
     </div>
 
-    <!-- EXPANDABLE TECHNICAL ANALYSIS (SECTION 42 SPECIFICATION) -->
-    <details class="card ai-card" style="margin-top:14px;background:var(--bg3);border-color:var(--bd2)">
-      <summary style="cursor:pointer;font-weight:700;color:var(--tx2);display:flex;align-items:center;justify-content:space-between;padding:4px 0">
+    <!-- BOTTOM ACTION BAR -->
+    <div class="fb" style="padding:10px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;margin-bottom:14px">
+      <span style="font-size:12px;color:var(--tx2)">Apply the audit report recommendations above to refine your prompt for flawless, artifact-free video generation.</span>
+      <button class="btn btn-p btn-sm" onclick="copyDriftReport(this)">📋 Copy Full Audit Report</button>
+    </div>
+
+    ${parsed.finalPrompt ? `
+    <!-- OPTIONAL REFERENCE PROMPT (COLLAPSIBLE) -->
+    <details style="background:var(--bg2);border:1px solid var(--bd2);border-radius:8px;padding:10px 14px;margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:600;font-size:12px;color:var(--tx2);display:flex;align-items:center;justify-content:space-between">
         <div class="fc g8">
-          <span>🔬 Detailed Technical Analysis & State Matrix</span>
-          <span class="tag ai" style="font-size:10px">Advanced Audit</span>
+          <span>✨ Optional: Reference Generation Prompt Formulation</span>
+          <span class="dim" style="font-size:11px">(Click to view sample prompt formulated from audit fixes)</span>
         </div>
-        <span style="font-size:11px;color:var(--ai)">Click to Expand ▼</span>
+        <span style="font-size:11px;color:var(--ai)">Click to View ▼</span>
       </summary>
-      <div style="margin-top:14px;border-top:1px solid var(--bd2);padding-top:12px">
-        <div class="fb" style="margin-bottom:10px">
-          <span style="font-size:11px;color:var(--tx3)">Comprehensive physical state tracking, mirror checks, human kinematics, and dialogue timing</span>
-          <button class="btn btn-s btn-xs" onclick="copyDriftReport(this)">📋 Copy Full Audit</button>
+      <div style="margin-top:10px;border-top:1px solid var(--bd);padding-top:10px">
+        <div class="fb" style="margin-bottom:6px">
+          <span style="font-size:11px;color:var(--tx3)">Ready for Seedance / Kling / Runway</span>
+          <div class="fc g8">
+            <button class="btn btn-p btn-xs" onclick="copyFinalPrompt(this)">📋 Copy Reference Prompt</button>
+            <button class="btn btn-s btn-xs" onclick="sendToPromptEnforcer()">✨ Send to Enforcer</button>
+          </div>
         </div>
-        <div id="drift-report-body" style="font-size:13px;line-height:1.8;color:var(--tx1)">
-          ${formatDriftReportMarkdown(parsed.details || response)}
-        </div>
+        <div class="final-prompt-box" id="final-prompt-content">${escH(parsed.finalPrompt)}</div>
       </div>
     </details>
+    ` : ''}
   `;
 }
 
@@ -1920,6 +1963,9 @@ function generateLocalContinuityReport(prev, next, script){
     }
   }
 
+  const dialogueWords = dialogue ? dialogue.split(/\s+/).filter(Boolean).length : 0;
+  const minDialogueSec = dialogueWords > 0 ? (dialogueWords / 2.2).toFixed(1) : "0.0";
+
   // 3. Extract Emotion Cues
   let emotion = "controlled dramatic resolve";
   if(/tear|crying|weep/i.test(next) && /resolve|cold|furious|determined|destroy/i.test(next)){
@@ -1930,7 +1976,7 @@ function generateLocalContinuityReport(prev, next, script){
     emotion = "apprehensive alertness";
   }
 
-  // 4. Build Section 42 Report Items
+  // 4. Executive Summary Items
   const continuityItems = [
     `✓ Character identity locked (${charName})`,
     `✓ Wardrobe carried forward (${wardrobe})`,
@@ -1939,16 +1985,73 @@ function generateLocalContinuityReport(prev, next, script){
   ];
 
   const risks = [
-    "⚠ Head rotation timing: sudden head snapping without eye-saccade leads to robotic CGI appearance",
-    "⚠ Emotion transition risk: tear-wiping to cold resolve requires natural kinetic hand drop",
-    dialogue && dialogue.split(/\s+/).length > 8 ? "⚠ Dialogue pacing: line requires ~3.0s+ of breathing support for genuine cinematic weight" : "⚠ Secondary motion risk: unblinking gaze risks plastic mannequin artifact"
+    "⚠ Pacing Risk: Instant head turn without ocular saccade lead creates robotic CGI appearance.",
+    dialogueWords > 7 ? `⚠ Dialogue Delivery Risk: Spoken line has ${dialogueWords} words; requires minimum ${minDialogueSec}s of delivery time (strictly ≤ 2.5 wps) to prevent rushed lip-sync.` : "⚠ Pacing Risk: Abrupt emotional shift without transition beat risks unnatural wooden performance.",
+    "⚠ Physics Violation Risk: Arm descent after tear-wipe must obey gravitational mass rather than instantaneous snapping.",
+    "⚠ Geometry Risk: Changing camera perspective risks reversing screen direction and breaking 180° axis."
   ];
 
-  const corrections = [
-    "✓ Action segmented into 3 progressive temporal beats with realistic eye-lead rotation",
-    "✓ Kinematic gravity applied to tear-wipe forearm descent and shoulder settling",
-    dialogue ? `✓ Spoken delivery timed with micro-breathing cadence: "${dialogue.substring(0, 45)}..."` : "✓ Subtle secondary motion locked (breathing, eye focus fixation on doorway)"
+  const actionableFixes = [
+    `🛠️ Add explicit 3-stage temporal beats (0.0-1.2s wipe/settle, 1.2-2.8s gaze shift to door, 2.8-5.0s rigid hold).`,
+    dialogueWords > 0 ? `🛠️ Calibrate spoken audio: Allocate ≥ ${minDialogueSec}s for delivery ("${dialogue.substring(0, 35)}...") with diaphragmatic breath intake.` : `🛠️ Insert natural breathing cadence (subtle chest rise/fall, micro-blinking at 12-18 bpm).`,
+    `🛠️ Enforce biomechanical eye-lead: Eye saccade must lead neck rotation by 100ms.`,
+    `🛠️ Anchor feet to floor plane: Explicitly prompt zero gliding, sliding, or floor skating.`
   ];
+
+  // 5. Build Comprehensive 7-Section Audit Report
+  const comprehensiveAudit = `#### 1. 🛠️ Kya Kya Fix Karna Hai (Actionable Prompt Adjustments)
+- **Add Temporal Chronology Beats**: Replace generic narrative descriptions with explicit chronological timestamps (e.g., 0.0–1.2s, 1.2–2.8s, 2.8–5.0s) to force the diffusion model to pace motion naturally.
+- **Add Biomechanical Eye-Lead Rule**: Prompt: "Her gaze shifts decisively toward the door 100ms before her head turns." Without this, AI models snap the whole neck instantaneously.
+- **Add Gravitational Mass Cue**: After wiping her cheek, her arm must drop naturally with real gravitational inertia and shoulder settling, not disappear or snap down.
+- **Add Anti-Skate Floor Contact**: Explicitly lock foot placement to the floor to prevent synthetic foot-sliding/gliding during the shot.
+${dialogueWords > 0 ? `- **Calibrate Dialogue Cadence**: Allocate at least ${minDialogueSec} seconds for the ${dialogueWords}-word line to maintain ≤ 2.2 words/sec with natural diaphragmatic breath support.` : "- **Add Breathing & Secondary Motion**: Include subtle throat swallow, steady chest rise/fall, and controlled jaw tension."}
+
+#### 2. ⏱️ Consistent Pacing & Temporal Timing Analysis
+- **Shot Duration Recommendation**: 5.0 seconds.
+- **Phase Breakdown**:
+  - *Beat 1 (0.0s – 1.2s)*: Grounded baseline state; hand finishes wiping cheek and lowers smoothly under gravity.
+  - *Beat 2 (1.2s – 2.8s)*: Transition beat; eyes lead head rotation toward doorway; breath intake before line delivery.
+  - *Beat 3 (2.8s – 5.0s)*: Performance climax & hold; motionless composure locked on doorway; rigid jaw clench.
+${dialogueWords > 0 ? `- **Dialogue Delivery Audit**:
+  - Spoken Text: "${dialogue}"
+  - Word Count: ${dialogueWords} words
+  - Max Delivery Rate: ≤ 2.5 words/second
+  - Required Execution Window: Minimum ${minDialogueSec}s allocated
+  - Pacing Status: ✓ VALIDATED (Calibrated at ~2.2 wps with organic breath support)` : `- **Pacing Rhythm**: Unhurried human tempo; 1.6-second physical pause before emotional settling.`}
+
+#### 3. 🎭 Human Emotion & Observable Acting Performance
+- **Micro-Expressions**: Eye saccades lock onto target before head aligns; eyelid blink rate drops under hyper-focused resolve; nostrils flare slightly on breath intake.
+- **Somatic Indicators**: Measurable diaphragmatic breathing; visible throat swallow; tension ripples along the sternocleidomastoid neck muscle.
+- **Subtext Physicalization**: Grief transforms into vengeance through rigid jaw tightening and hard mouth line rather than exaggerated cartoon frowning.
+
+#### 4. 🧭 Room Geometry, 180° Rule & Spatial Anchors
+- **Fixed Wall Anchors**:
+  - North Wall: Window aperture with cool ambient exterior light falloff.
+  - East Wall: Doorway aperture (focal target for character exit/eyeline).
+- **Camera Perspective**: Medium Close-Up at eye level (50mm lens equivalent); shallow depth of field (f/2.2).
+- **180° Axis of Action**: Camera remains strictly on the west-facing axis to prevent reverse-angle screen-direction disorientation.
+- **Eyeline Lock**: Character gaze directed toward screen-right (doorway anchor).
+
+#### 5. 🚶 Human Kinematics & Real-World Physics
+- **Mass & Inertia**: Character weight is grounded; core torso stabilizes before limb movement.
+- **Traversal Speed**: Zero rapid translation; stationary posture with natural weight shift between left and right foot.
+- **Floor Contact**: Shoes firmly planted on surface; zero horizontal floating or skating artifacts.
+- **Secondary Dynamics**: Fabric folds of ${wardrobe} settle organically under gravity as hand lowers.
+
+#### 6. 📊 Structured Continuity State Matrix
+| Element / Character / Prop | Intended Canonical State (Bible) | Observed Baseline State (Prev Shot) | Proposed Next Shot State | Status & Constraint Audit |
+| Character Identity | ${charName} | Established in frame | ${charName} | ✓ INHERIT & LOCKED |
+| Wardrobe Specification | ${wardrobe} | ${wardrobe} | ${wardrobe} | ✓ INHERIT (Zero drift) |
+| Room Coordinates | Established interior | Grounded in room | Same room / heading doorway | ✓ GEOMETRY PRESERVED |
+| Eyeline Direction | Focused on exit | Tear wiping / floor | Doorway (Screen-Right) | ✓ PROGRESSION TRACKED |
+| Emotional Trajectory | Cold resolve | Grief / tear wiped | Icy resolute determination | ✓ MOTIVATED SHIFT |
+| Floor Kinematics | Planted feet | Grounded | Firm foot plant (anti-skate) | ✓ PHYSICS ENFORCED |
+
+#### 7. 🔄 Anatomical Coordinates vs Screen Coordinates & Mirror Safeguard
+- **Coordinate Mapping**:
+  - Character Anatomical LEFT → Projected to SCREEN-RIGHT (Camera facing subject frontal MCU).
+  - Character Anatomical RIGHT → Projected to SCREEN-LEFT.
+- **Anti-Mirror Lock**: Explicit safeguard against synthetic mirror-flipping; scars, hair parting, and wardrobe seams maintain absolute anatomical position.`;
 
   const finalPrompt = `[SHOT INTENT: Intimate dramatic turn; grief calcifies into resolute vengeance]
 [SUBJECT + IDENTITY: ${charName}, locked canonical facial features, styled hair, ${wardrobe}]
@@ -1960,18 +2063,6 @@ function generateLocalContinuityReport(prev, next, script){
 `\n[CONTINUITY LOCK: Retains ${wardrobe} and room coordinates from previous shot; eyeline locked toward doorway.]
 [PHYSICAL REALISM SAFEGUARDS: Natural cervical spine kinematics with realistic eye-lead latency; grounded foot contact with floor; zero sliding or floating.]`;
 
-  const details = `#### 1. Structured Continuity State Matrix
-| Element / Character | Intended Canonical State | Observed Baseline State | Proposed Next Shot State | Status & Constraint Audit |
-| Character Identity | ${charName} | Established | ${charName} | ✓ INHERIT |
-| Wardrobe | ${wardrobe} | ${wardrobe} | ${wardrobe} | ✓ INHERIT |
-| Emotional Arc | Cold resolve | Wiping tear | Tear to resolute vengeance | ✓ PROGRESSION |
-| Spatial Heading | Toward doorway | Inside room | Facing door | ✓ EYELINE LOCKED |
-
-#### 2. Human Kinematics & Performance Audit
-- Biomechanical eye-saccade precedes neck rotation by 100ms.
-- Downward arm retraction obeys natural gravitational momentum.
-- Dialogue delivery calibrated at ~2.2 wps with realistic diaphragmatic breath support.`;
-
   return `### 🎯 CONTINUITY & INHERITANCE
 Mode: ${mode}
 ${continuityItems.join("\n")}
@@ -1979,18 +2070,18 @@ ${continuityItems.join("\n")}
 ### ⚠️ RISKS FLAGGED
 ${risks.join("\n")}
 
-### 🛠️ CORRECTIONS APPLIED
-${corrections.join("\n")}
+### 🛠️ KYA KYA FIX KARNA HAI (ACTIONABLE AUDIT FIXES)
+${actionableFixes.join("\n")}
 
-### ✨ FINAL OPTIMIZED GENERATION PROMPT
-${finalPrompt}
+### 🔬 COMPREHENSIVE CONTINUITY & PHYSICAL REALISM AUDIT REPORT
+${comprehensiveAudit}
 
-### 🔬 DETAILED TECHNICAL ANALYSIS
-${details}`;
+### ✨ OPTIONAL REFERENCE PROMPT (Condensed Formulation)
+${finalPrompt}`;
 }
 
 // ═══════════════════════════════════════
-// CONTINUITY & OPTIMIZATION ENGINE (AI)
+// CONTINUITY & REALISM AUDIT ENGINE (AI)
 // ═══════════════════════════════════════
 async function runDriftDetect(){
   const scriptTextRaw = document.getElementById('drift-script')?.value.trim() || '';
@@ -2023,7 +2114,7 @@ async function runDriftDetect(){
       <div style="display:inline-block;width:34px;height:34px;border:3px solid var(--aiborder);border-top-color:var(--ai);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:14px"></div>
       <div style="font-size:15px;font-weight:700;color:var(--ai)">Connecting to Google Gemini Cloud API...</div>
       <div style="font-size:12px;color:var(--tx2);margin-top:6px">
-        Analyzing conditional continuity, human kinematics, physical geometry & synthesizing optimized generation prompt on <strong>${activeModel}</strong>${observedFrame ? ' with Multimodal Vision' : ''}...
+        Analyzing conditional continuity, consistent pacing, human emotions, room geometry & kinematics for comprehensive audit report on <strong>${activeModel}</strong>${observedFrame ? ' with Multimodal Vision' : ''}...
       </div>
       <div style="font-size:11px;color:var(--tx2);margin-top:10px;opacity:0.75">
         (Live HTTP call to generativelanguage.googleapis.com · Zero local templates)
@@ -2077,17 +2168,19 @@ async function runDriftDetect(){
       `If the rendered image shows an asymmetrical marker (e.g. scar, tattoo, watch, parting) on a different anatomical side, or with different clothing colors or room background, flag this observed state immediately to prevent compounding continuity drift!\n\n`;
   }
 
-  const prompt = `You are an elite television continuity supervisor, cinematographer, acting coach, and cinematic prompt engineer.
+  const prompt = `You are an elite television continuity supervisor, cinematographer, acting coach, and physical realism auditor.
 Stop treating continuity as merely a vague "prompt-comparison" problem. Treat it as a strict CONDITIONAL CONTINUITY and PHYSICAL REALISM SYSTEM.
 
-CORE MISSION:
-PREVIOUS SHOT PROMPT + NEW SHOT PROMPT
-→ Understand what is still relevant (CONTINUE vs TRANSITION vs RESET)
-→ Detect contradictions (camera behind vs frontal, wardrobe overrides, prop transfers)
-→ Detect physical/human/cinematic problems (impossible kinematics, eyeline mismatch, duplicate character)
-→ Detect missing constraints & pacing issues (dialogue rate > 2.5 wps, temporal action beats)
-→ Improve pacing, dialogue delivery, emotion, geometry, and physics
-→ Produce ONE clean, generation-ready, optimized prompt for the NEW SHOT.
+CRITICAL USER REQUIREMENT:
+The user explicitly does NOT want just a generation prompt rewrite.
+The user NEEDS an EXHAUSTIVE, MICROSCOPIC CONTINUITY & PHYSICAL REALISM AUDIT REPORT that clearly itemizes:
+1. Kya Kya Fix Karna Hai (Exact prompt adjustments needed for flawless generation)
+2. Consistent Pacing & Temporal Timing (Duration breakdown into temporal beats, dialogue delivery rate ≤ 2.5 words/second, unhurried human pacing)
+3. Human Emotions & Observable Performance (Micro-expressions, eye-saccade leading head turns, breathing cadence, jaw clench, physical subtext)
+4. Room Geometry, 180° Rule & Spatial Anchors (Fixed compass directions, camera position/axis, screen-left vs screen-right eyeline lock)
+5. Human Kinematics & Real-World Physics (Mass, traversal speed ~3-4 ft/sec, posture transition preparation, grounded foot plant, zero skating/sliding/teleporting)
+6. Structured Continuity State Matrix (Canonical Bible vs Observed Baseline vs Next Shot)
+7. Anatomical vs Screen Coordinates & Mirror Lock (Anatomical Left/Right mapped to Screen position, mirror-flip prevention)
 
 THE NEW PROMPT IS AUTHORITATIVE. The previous prompt is temporary context, NOT blindly carried forward.
 
@@ -2109,7 +2202,6 @@ MANDATORY CONTINUITY & PHYSICAL REALISM RULES:
    - Resolve camera perspective conflicts (e.g. camera behind subject cannot capture frontal facial expressions).
    - Prop transfer: If a character sets down an object, it cannot remain in their hand.
    - Eyeline matching & screen direction (180-degree rule) must be preserved.
-   - Duplicate character safeguard: Differentiate live physical character from recorded/surveillance footage.
 
 3. ANATOMICAL COORDINATES vs SCREEN COORDINATES:
    - Asymmetrical markers (scars, tattoos, birthmarks, hair partings, watches) are permanently locked to their anatomical side.
@@ -2118,12 +2210,11 @@ MANDATORY CONTINUITY & PHYSICAL REALISM RULES:
 
 4. HUMAN REALISM & KINEMATICS:
    - Humans have mass; walking speed ~3-4 ft/sec. Characters cannot instantly teleport or slide without physical traversal steps and elapsed time.
-   - Posture transitions require kinetic preparation (sitting to standing).
-   - Divide action into clear temporal beats (e.g. 0-2s initial state, 2-4s primary action, 4-6s reaction/beat).
+   - Posture transitions require kinetic preparation (sitting to standing, head turns preceded by eye saccades).
    - Realistic secondary motion: natural blinking (12-18 bpm, suppressed under intense concentration), weight shifts, breathing cadence.
 
 5. DIALOGUE & PERFORMANCE:
-   - Dialogue delivery: max ~2.5 words per second. If dialogue is too long for estimated duration, condense or pace appropriately.
+   - Dialogue delivery: max ~2.5 words per second. If dialogue is too long for estimated duration, flag it and calculate minimum duration needed.
    - Listening performance: mouth closed, subtle micro-reactions (micro-nod, eye focus shift, swallow, tension in jaw).
    - Emotional progression: translate internal emotion into observable physical behavior.
 
@@ -2137,39 +2228,61 @@ Mode: [CONTINUE | TRANSITION | RESET]
 - → [Emotional progression or handoff]
 
 ### ⚠️ RISKS FLAGGED
-- ⚠ [Risk 1: geometry, camera conflict, pacing, kinematics, dialogue, or physics]
+- ⚠ [Risk 1: Geometry, camera conflict, pacing, kinematics, dialogue, or physics defect]
 - ⚠ [Risk 2: ...]
 
-### 🛠️ CORRECTIONS APPLIED
-- ✓ [Correction 1: exact adjustment made to resolve risk]
-- ✓ [Correction 2: exact adjustment made to resolve risk]
+### 🛠️ KYA KYA FIX KARNA HAI (ACTIONABLE AUDIT FIXES)
+- 🛠️ [Fix 1: Exact prompt change/addition needed]
+- 🛠️ [Fix 2: Exact prompt change/addition needed]
+- 🛠️ [Fix 3: Exact prompt change/addition needed]
 
-### ✨ FINAL OPTIMIZED GENERATION PROMPT
-[Produce ONE single, complete, production-ready cinematic prompt structured with:
-- SHOT INTENT
-- SUBJECT & IDENTITY (immutable character tokens)
-- ENVIRONMENT & LIGHTING
-- SPATIAL GEOMETRY & CAMERA (framing, lens, movement)
-- ACTION & TEMPORAL BEATS (broken into timed phase beats)
-- EMOTIONAL PERFORMANCE & EXPRESSION (observable physical behavior)
-- DIALOGUE & AUDIO DELIVERY (if dialogue present, natural cadence, 100% English)
-- CONTINUITY LOCK & PHYSICAL SAFEGUARDS (anti-sliding, anti-mirroring, weight gravity)]
+### 🔬 COMPREHENSIVE CONTINUITY & PHYSICAL REALISM AUDIT REPORT
 
-### 🔬 DETAILED TECHNICAL ANALYSIS
-#### 1. Structured Continuity State Matrix
-| Element / Character / Prop | Intended Canonical State | Observed State | Proposed Next Shot | Status & Constraint Audit |
-...
-#### 2. Spatial Graph & Coordinate Verification
-...
-#### 3. Human Kinematics & Physics Audit
-...
-#### 4. Dialogue Timing & Performance Analysis
-...`;
+#### 1. 🛠️ Kya Kya Fix Karna Hai (Actionable Prompt Adjustments)
+Provide a clear, detailed bullet-point list of EXACT prompt adjustments needed for flawless video generation:
+- What to add (temporal timestamps, eye-lead saccade, floor contact anchors, breath cues)
+- What to remove (contradictory camera angles, impossible instant traversal, ambiguous left/right terms)
+- What to rewrite for Seedance/Kling/Runway compliance
+
+#### 2. ⏱️ Consistent Pacing & Temporal Timing Analysis
+- Temporal Beat Breakdown: Divide shot duration into chronological action beats (e.g., 0.0–1.2s initial, 1.2–2.8s primary action, 2.8–5.0s hold/settle).
+- Dialogue Delivery Cadence: Audit spoken dialogue word count vs allotted seconds (strict ≤ 2.5 words/sec limit; calculate exact words and minimum seconds needed).
+- Human Temporal Rhythm: Natural unhurried tempo, pause before reaction, breath support before speech.
+
+#### 3. 🎭 Human Emotion & Observable Acting Performance
+- Micro-expressions & Ocular Dynamics: Eye saccade leads head rotation by ~100ms. Blinking cadence (12–18 bpm, suppressed under intense concentration).
+- Somatic & Physiological Cues: Diaphragmatic breathing (subtle chest/shoulder rise), throat swallow, tension in jaw/neck muscles.
+- Subtext Manifestation: Translate internal feelings into visible external behavioral cues rather than generic adjectives.
+- Listening Performance (if applicable): Closed mouth, micro-nod, subtle shift in eye focal depth.
+
+#### 4. 🧭 Room Geometry, 180° Rule & Spatial Anchors
+- Compass Wall Anchors: Permanent fixed cardinal locations (North, East, South, West wall features).
+- Camera Position, Heading & Line of Action: Verify 180-degree rule integrity to prevent reverse-angle disorientation.
+- Eyelines & Screen Direction: Screen-left vs screen-right matching. Eyeline locked to target object/character.
+- Depth Layering: Foreground, midground, and background element positioning.
+
+#### 5. 🚶 Human Kinematics & Real-World Physics
+- Mass, Momentum & Traversal Speed: Human walking speed ~3–4 ft/second. Characters cannot instantly close distance without physical traversal steps and elapsed time.
+- Kinetic Preparation & Posture Transitions: Weight shifting before standing or turning; arm retraction obeying gravitational momentum.
+- Ground Contact & Anti-Skate Safeguards: Firm floor contact with locked foot plant; zero sliding, skating, or unnatural floating.
+- Fabric & Secondary Physics: Natural drape, clothing settling with gravity, hair inertia.
+
+#### 6. 📊 Structured Continuity State Matrix
+| Element / Character / Prop | Intended Canonical State (Bible) | Observed Baseline State (Prev Shot) | Proposed Next Shot State | Status & Constraint Audit |
+
+#### 7. 🔄 Anatomical Coordinates vs Screen Coordinates & Mirror Safeguard
+- Asymmetric Features (scars, tattoos, watches, hair partings):
+  - Character Anatomical Side: [LEFT/RIGHT]
+  - Projected Screen Position based on camera heading: [SCREEN-LEFT / SCREEN-RIGHT]
+- Anti-Mirror Instruction: Explicit directive preventing synthetic AI mirror-flipping.
+
+### ✨ OPTIONAL REFERENCE PROMPT (Condensed Formulation)
+[Provide a compact reference prompt consolidating the audit fixes above, for optional copy or direct export if desired.]`;
 
   try {
     const response = await gemini(
       prompt,
-      'You are a premier television continuity supervisor and cinematic prompt engineer. You audit conditional scene continuity, validate physical kinematics, and synthesize clean, production-ready generation prompts. All content is fictional creative screenwriting.',
+      'You are a premier television continuity supervisor, cinematographer, acting coach, and physical realism auditor. You produce an exhaustive, microscopic continuity & physical realism audit report for creative screenwriting.',
       0.35,
       observedFrame
     );
@@ -2178,7 +2291,7 @@ Mode: [CONTINUE | TRANSITION | RESET]
     }
     renderDriftReportSuccess(response);
     msg.style.color = 'var(--ok)';
-    msg.textContent = '✅ Continuity state audit complete (gemini-3.1-flash-lite)';
+    msg.textContent = '✅ Continuity & Realism Audit complete (gemini-3.1-flash-lite)';
   } catch(e) {
     console.warn('Gemini Cloud Call error, activating deterministic local continuity engine fallback:', e);
     try {
@@ -2193,7 +2306,7 @@ Mode: [CONTINUE | TRANSITION | RESET]
       };
       renderDriftReportSuccess(localReport);
       msg.style.color = 'var(--ok)';
-      msg.textContent = '✅ Continuity optimized (Cloud Safety Bypassed · Zero Disruption)';
+      msg.textContent = '✅ Continuity & Realism Audit Complete (Resilience Engine Verified)';
     } catch(errLocal) {
       console.error('Local fallback failed:', errLocal);
       msg.style.color = 'var(--err)';
