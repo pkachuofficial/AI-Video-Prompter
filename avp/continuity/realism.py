@@ -77,9 +77,10 @@ def analyze_anatomical_safeguards(prompt: str) -> List[str]:
     if any(w in p_low for w in ["walk", "run", "step", "stride"]):
         safeguards.append("grounded foot placement with realistic floor contact; no foot sliding across surfaces or floating")
 
-    # Facial closeup risks
+    # Facial & ocular safeguards (always enforce biological non-glowing ocular optics)
+    safeguards.append("natural non-glowing biological ocular optics: organic matte irises, natural subtle ambient catchlight only, strictly zero eye glow, glowing pupils, or synthetic corneal flares")
     if any(w in p_low for w in ["close-up", "cu", "face", "eyes", "expression", "look"]):
-        safeguards.append("stable facial proportions and symmetrical ocular alignment without warping or facial deformation")
+        safeguards.append("stable facial proportions, consistent natural iris pigmentation, and symmetrical ocular alignment without eye glow, flashlight reflection, or iris warping")
 
     return safeguards
 
@@ -97,7 +98,10 @@ def build_dynamic_negative_constraints(
     """
     negatives = [
         "deformed limbs", "extra fingers", "missing fingers", "fused hands",
-        "floating feet", "sliding across floor", "body clipping through objects"
+        "floating feet", "sliding across floor", "body clipping through objects",
+        "glowing eyes", "eye glow", "glowing pupils", "luminous irises", "laser eyes",
+        "demonic eye shine", "synthetic corneal flare", "neon eye emission",
+        "position jumping", "character position swap", "instant teleportation across room"
     ]
 
     p_low = prompt.lower()

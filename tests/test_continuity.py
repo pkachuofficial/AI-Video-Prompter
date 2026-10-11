@@ -262,3 +262,33 @@ def test_15_completely_new_scene(bridge):
     assert "railway station" in report.final_prompt.lower()
     # Owl shelf and bedroom must not contaminate the railway station
     assert "owl" not in report.final_prompt.lower()
+
+
+# ---------------------------------------------------------------------------
+# TEST 16 — ANTI-EYE-GLOW SAFEGUARD
+# ---------------------------------------------------------------------------
+def test_16_anti_eye_glow_safeguards(bridge):
+    """Enforces non-emissive biological ocular optics and bans synthetic eye glow."""
+    prev = "Evelyn in dramatic closeup, tears in her eyes."
+    new = "Evelyn looks up at Marcus with cold determination, eyes catching the tungsten key light."
+
+    report = bridge.analyze_and_optimize(prev, new)
+
+    assert "glowing eyes" in report.negative_prompt.lower() or "eye glow" in report.negative_prompt.lower()
+    assert "non-glowing" in report.final_prompt.lower() or "matte" in report.final_prompt.lower() or "zero eye glow" in report.final_prompt.lower()
+
+
+# ---------------------------------------------------------------------------
+# TEST 17 — CHARACTER POSITION LOCKING & JUMP DETECTION
+# ---------------------------------------------------------------------------
+def test_17_character_position_locking(bridge):
+    """Detects unexplained position jumps and locks stage coordinates."""
+    prev = "Evelyn stands screen-left by the lobby desk, looking toward the elevator."
+    new = "Evelyn is now screen-right staring at the security camera."
+
+    report = bridge.analyze_and_optimize(prev, new)
+
+    assert report.mode == ContinuityMode.CONTINUE
+    # Must flag position jump risk or enforce coordinate lock
+    assert any("position" in item.lower() for item in report.risks + report.corrections)
+    assert "position locked" in report.final_prompt.lower() or "stage coordinates" in report.final_prompt.lower()

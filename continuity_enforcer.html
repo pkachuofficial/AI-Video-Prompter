@@ -379,6 +379,10 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
           <label>Camera Position & Heading</label>
           <input type="text" id="drift-cam-coord" placeholder="e.g. Position: SOUTHWEST, Heading: Facing NORTHEAST">
         </div>
+        <div class="fg">
+          <label>📍 Character Stage Position & Coordinates</label>
+          <input type="text" id="drift-char-pos" placeholder="e.g. Screen-Left by desk, Coordinates: X=1.8m, Y=2.2m">
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
         <div class="fg">
@@ -548,7 +552,7 @@ hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
   <div class="card">
     <div class="ctitle">🚫 Global Negative Tokens</div>
     <div class="fg">
-      <textarea id="s-neg" style="min-height:65px" onchange="saveSettings()">3D render, plastic CGI sheen, glossy synthetic, video-game look, anime, cartoon, illustration, watermark, text overlay, deformed fingers, extra limbs, bad anatomy, motion blur artifacts, teleporting, sliding across floor, unnatural gliding, skating motion, instant position snapping, floating feet, changing eye color, shifting iris color, mismatched eyes, heterochromia drift, Chinese dialogue, Chinese speech, Mandarin audio, Cantonese voice, foreign language dubbing, Chinese subtitles, hanzi text, Asian text watermark, foreign text overlays</textarea>
+      <textarea id="s-neg" style="min-height:65px" onchange="saveSettings()">3D render, plastic CGI sheen, glossy synthetic, video-game look, anime, cartoon, illustration, watermark, text overlay, deformed fingers, extra limbs, bad anatomy, motion blur artifacts, teleporting, sliding across floor, unnatural gliding, skating motion, instant position snapping, floating feet, changing eye color, shifting iris color, mismatched eyes, heterochromia drift, glowing eyes, eye glow, glowing pupils, luminous irises, laser eyes, demonic eye shine, synthetic corneal glare, neon eye emission, character position jumping, swapping character positions, unexplained position teleportation, drifting coordinates, Chinese dialogue, Chinese speech, Mandarin audio, Cantonese voice, foreign language dubbing, Chinese subtitles, hanzi text, Asian text watermark, foreign text overlays</textarea>
     </div>
   </div>
 
@@ -1892,6 +1896,8 @@ function renderDriftReportSuccess(response){
         <span class="audit-pill">🚶 5. Kinematics & Physics</span>
         <span class="audit-pill">📊 6. State Matrix</span>
         <span class="audit-pill">🔄 7. Coordinates & Mirror Lock</span>
+        <span class="audit-pill" style="border-color:#38bdf8;color:#38bdf8">👁️ Anti-Eye-Glow Lock</span>
+        <span class="audit-pill" style="border-color:#a78bfa;color:#a78bfa">📍 Spatial Position Lock</span>
       </div>
 
       <!-- AUDIT REPORT BODY -->
@@ -1966,7 +1972,16 @@ function generateLocalContinuityReport(prev, next, script){
   const dialogueWords = dialogue ? dialogue.split(/\s+/).filter(Boolean).length : 0;
   const minDialogueSec = dialogueWords > 0 ? (dialogueWords / 2.2).toFixed(1) : "0.0";
 
-  // 3. Extract Emotion Cues
+  // 3. Extract Character Stage Positions & Detect Position Jumps
+  const charPosInput = (typeof document !== 'undefined' && document.getElementById('drift-char-pos')) ? document.getElementById('drift-char-pos').value.trim() : '';
+  const posRegex = /\b(screen[- ]left|screen[- ]right|screen[- ]center|center frame|stage left|stage right|left side|right side|foreground left|foreground right|by the (?:desk|door|window|elevator|counter|bed|monitors?|table|bar))\b/i;
+  const mPrevPos = prev.match(posRegex);
+  const mNextPos = next.match(posRegex);
+  const prevPos = mPrevPos ? mPrevPos[0] : (charPosInput || "Screen-Left");
+  const nextPos = mNextPos ? mNextPos[0] : prevPos;
+  const positionJumped = mPrevPos && mNextPos && (mPrevPos[0].toLowerCase() !== mNextPos[0].toLowerCase()) && !/walk|step|cross|move|run|stride/i.test(next);
+
+  // 4. Extract Emotion Cues
   let emotion = "controlled dramatic resolve";
   if(/tear|crying|weep/i.test(next) && /resolve|cold|furious|determined|destroy/i.test(next)){
     emotion = "transition from grief into icy, resolute vengeance";
@@ -1976,15 +1991,19 @@ function generateLocalContinuityReport(prev, next, script){
     emotion = "apprehensive alertness";
   }
 
-  // 4. Executive Summary Items
+  // 5. Executive Summary Items
   const continuityItems = [
     `✓ Character identity locked (${charName})`,
     `✓ Wardrobe carried forward (${wardrobe})`,
+    `✓ Character stage position anchored (${nextPos})`,
+    `✓ Ocular optics locked: natural biological eyes, zero synthetic pupil glow`,
     mode === "CONTINUE" ? "✓ Room environment, camera height & lighting setup preserved" : "↻ Previous space reset for clean transition",
     `✓ Emotional momentum preserved (${emotion})`
   ];
 
   const risks = [
+    "⚠ Ocular Glow Risk: AI diffusion models frequently introduce unnatural synthetic corneal glare or eye-glow in emotional close-ups; requires explicit biological non-emissive pupil constraint.",
+    positionJumped ? `⚠ Position Jumping Defect: Character was positioned at ${prevPos} in previous shot, but suddenly appears at ${nextPos} without physical transit steps.` : `⚠ Position Inconsistency Risk: Character stage blocking must be explicitly pinned (${nextPos}) to prevent random position jumping across camera cuts.`,
     "⚠ Pacing Risk: Instant head turn without ocular saccade lead creates robotic CGI appearance.",
     dialogueWords > 7 ? `⚠ Dialogue Delivery Risk: Spoken line has ${dialogueWords} words; requires minimum ${minDialogueSec}s of delivery time (strictly ≤ 2.5 wps) to prevent rushed lip-sync.` : "⚠ Pacing Risk: Abrupt emotional shift without transition beat risks unnatural wooden performance.",
     "⚠ Physics Violation Risk: Arm descent after tear-wipe must obey gravitational mass rather than instantaneous snapping.",
@@ -1992,14 +2011,18 @@ function generateLocalContinuityReport(prev, next, script){
   ];
 
   const actionableFixes = [
+    `🛠️ Enforce Anti-Eye-Glow Lock: Prompt biological corneal optics with matte irises, single ambient catchlight, and zero synthetic pupil luminance/glow.`,
+    `🛠️ Pin Character Stage Position: Explicitly anchor character to established stage coordinates (${nextPos}) to prevent sudden position snapping or stage drift.`,
     `🛠️ Add explicit 3-stage temporal beats (0.0-1.2s wipe/settle, 1.2-2.8s gaze shift to door, 2.8-5.0s rigid hold).`,
     dialogueWords > 0 ? `🛠️ Calibrate spoken audio: Allocate ≥ ${minDialogueSec}s for delivery ("${dialogue.substring(0, 35)}...") with diaphragmatic breath intake.` : `🛠️ Insert natural breathing cadence (subtle chest rise/fall, micro-blinking at 12-18 bpm).`,
     `🛠️ Enforce biomechanical eye-lead: Eye saccade must lead neck rotation by 100ms.`,
     `🛠️ Anchor feet to floor plane: Explicitly prompt zero gliding, sliding, or floor skating.`
   ];
 
-  // 5. Build Comprehensive 7-Section Audit Report
+  // 6. Build Comprehensive 7-Section Audit Report
   const comprehensiveAudit = `#### 1. 🛠️ Kya Kya Fix Karna Hai (Actionable Prompt Adjustments)
+- **Enforce Ocular Anti-Glow Lock**: Inject mandatory biological ocular directives: "Natural biological corneal optics with organic matte irises, single subtle ambient catchlight matching room key light; strictly zero eye glow, glowing pupils, or synthetic corneal flare."
+- **Lock Character Stage Position & Blocking**: Pin exact stage coordinates (e.g. "Stands ${nextPos} at [X=1.8m, Y=2.2m], maintaining position from previous shot"). Prevent the AI video model from teleporting the subject or changing room coordinates without physical footsteps.
 - **Add Temporal Chronology Beats**: Replace generic narrative descriptions with explicit chronological timestamps (e.g., 0.0–1.2s, 1.2–2.8s, 2.8–5.0s) to force the diffusion model to pace motion naturally.
 - **Add Biomechanical Eye-Lead Rule**: Prompt: "Her gaze shifts decisively toward the door 100ms before her head turns." Without this, AI models snap the whole neck instantaneously.
 - **Add Gravitational Mass Cue**: After wiping her cheek, her arm must drop naturally with real gravitational inertia and shoulder settling, not disappear or snap down.
@@ -2009,7 +2032,7 @@ ${dialogueWords > 0 ? `- **Calibrate Dialogue Cadence**: Allocate at least ${min
 #### 2. ⏱️ Consistent Pacing & Temporal Timing Analysis
 - **Shot Duration Recommendation**: 5.0 seconds.
 - **Phase Breakdown**:
-  - *Beat 1 (0.0s – 1.2s)*: Grounded baseline state; hand finishes wiping cheek and lowers smoothly under gravity.
+  - *Beat 1 (0.0s – 1.2s)*: Grounded baseline state; hand finishes wiping cheek and lowers smoothly under gravity; subject anchored at ${nextPos}.
   - *Beat 2 (1.2s – 2.8s)*: Transition beat; eyes lead head rotation toward doorway; breath intake before line delivery.
   - *Beat 3 (2.8s – 5.0s)*: Performance climax & hold; motionless composure locked on doorway; rigid jaw clench.
 ${dialogueWords > 0 ? `- **Dialogue Delivery Audit**:
@@ -2020,11 +2043,13 @@ ${dialogueWords > 0 ? `- **Dialogue Delivery Audit**:
   - Pacing Status: ✓ VALIDATED (Calibrated at ~2.2 wps with organic breath support)` : `- **Pacing Rhythm**: Unhurried human tempo; 1.6-second physical pause before emotional settling.`}
 
 #### 3. 🎭 Human Emotion & Observable Acting Performance
+- **Ocular Optics & Anti-Glow Safeguard**: Biological corneal curvature with natural light absorption; matte iris pigmentation consistent with Character Bible; zero synthetic pupil glow, laser glare, or flashlight reflection; organic pupil dilation responding only to ambient room lumens.
 - **Micro-Expressions**: Eye saccades lock onto target before head aligns; eyelid blink rate drops under hyper-focused resolve; nostrils flare slightly on breath intake.
 - **Somatic Indicators**: Measurable diaphragmatic breathing; visible throat swallow; tension ripples along the sternocleidomastoid neck muscle.
 - **Subtext Physicalization**: Grief transforms into vengeance through rigid jaw tightening and hard mouth line rather than exaggerated cartoon frowning.
 
 #### 4. 🧭 Room Geometry, 180° Rule & Spatial Anchors
+- **Character Stage Blocking & Position Lock**: Character coordinates firmly locked to ${nextPos} (maintaining exact position from previous shot); two-shot blocking maintains relative left/right positioning without coordinate swapping or random relocation.
 - **Fixed Wall Anchors**:
   - North Wall: Window aperture with cool ambient exterior light falloff.
   - East Wall: Doorway aperture (focal target for character exit/eyeline).
@@ -2033,8 +2058,7 @@ ${dialogueWords > 0 ? `- **Dialogue Delivery Audit**:
 - **Eyeline Lock**: Character gaze directed toward screen-right (doorway anchor).
 
 #### 5. 🚶 Human Kinematics & Real-World Physics
-- **Mass & Inertia**: Character weight is grounded; core torso stabilizes before limb movement.
-- **Traversal Speed**: Zero rapid translation; stationary posture with natural weight shift between left and right foot.
+- **Mass, Position & Traversal Speed**: Character weight is grounded at ${nextPos}; core torso stabilizes before limb movement. Locomotion calibrated at ~3–4 ft/second (zero sudden position jumping or teleporting between cuts).
 - **Floor Contact**: Shoes firmly planted on surface; zero horizontal floating or skating artifacts.
 - **Secondary Dynamics**: Fabric folds of ${wardrobe} settle organically under gravity as hand lowers.
 
@@ -2042,6 +2066,8 @@ ${dialogueWords > 0 ? `- **Dialogue Delivery Audit**:
 | Element / Character / Prop | Intended Canonical State (Bible) | Observed Baseline State (Prev Shot) | Proposed Next Shot State | Status & Constraint Audit |
 | Character Identity | ${charName} | Established in frame | ${charName} | ✓ INHERIT & LOCKED |
 | Wardrobe Specification | ${wardrobe} | ${wardrobe} | ${wardrobe} | ✓ INHERIT (Zero drift) |
+| Character Stage Position | ${prevPos} | ${prevPos} | ${nextPos} | ✓ POSITION LOCKED (Zero jumping) |
+| Ocular Optics / Eye Glow | Biological / Matte | Natural ambient catchlight | Natural non-glowing cornea | ✓ ANTI-GLOW LOCKED (Zero pupil flare) |
 | Room Coordinates | Established interior | Grounded in room | Same room / heading doorway | ✓ GEOMETRY PRESERVED |
 | Eyeline Direction | Focused on exit | Tear wiping / floor | Doorway (Screen-Right) | ✓ PROGRESSION TRACKED |
 | Emotional Trajectory | Cold resolve | Grief / tear wiped | Icy resolute determination | ✓ MOTIVATED SHIFT |
@@ -2051,17 +2077,20 @@ ${dialogueWords > 0 ? `- **Dialogue Delivery Audit**:
 - **Coordinate Mapping**:
   - Character Anatomical LEFT → Projected to SCREEN-RIGHT (Camera facing subject frontal MCU).
   - Character Anatomical RIGHT → Projected to SCREEN-LEFT.
-- **Anti-Mirror Lock**: Explicit safeguard against synthetic mirror-flipping; scars, hair parting, and wardrobe seams maintain absolute anatomical position.`;
+  - Character Stage Position: ${nextPos} (Locked to camera frame).
+- **Anti-Mirror Lock**: Explicit safeguard against synthetic mirror-flipping; scars, hair parting, wardrobe seams, and stage positions maintain absolute anatomical position.`;
 
   const finalPrompt = `[SHOT INTENT: Intimate dramatic turn; grief calcifies into resolute vengeance]
 [SUBJECT + IDENTITY: ${charName}, locked canonical facial features, styled hair, ${wardrobe}]
+[STAGE BLOCKING: Position locked to ${nextPos}, maintaining consistent stage placement without position snapping or teleportation]
+[OCULAR REALISM: Biological non-glowing eyes, matte corneal reflection with single diffused ambient catchlight, zero synthetic pupil glow or luminescence]
 [ENVIRONMENT: Established moody interior room, soft diffused tungsten key light from screen-left, deep atmospheric shadow falloff]
 [SPATIAL GEOMETRY & CAMERA: Medium close-up, 50mm portrait lens at eye level, shallow depth of field (f/2.2), subtle organic push-in]
-[ACTION + TEMPORAL BEATS: 0.0–1.2s: Stands grounded inside the room; her right hand lowers from her cheek as she finishes wiping away a final tear. 1.2–2.8s: Her gaze shifts decisively toward the door first, followed by a measured, deliberate turn of her head. 2.8–5.0s: Holds motionless gaze locked onto the doorway; jaw muscles clench once with rigid, unblinking composure.]
+[ACTION + TEMPORAL BEATS: 0.0–1.2s: Stands grounded ${nextPos} inside the room; her right hand lowers from her cheek as she finishes wiping away a final tear. 1.2–2.8s: Her gaze shifts decisively toward the door first, followed by a measured, deliberate turn of her head. 2.8–5.0s: Holds motionless gaze locked onto the doorway; jaw muscles clench once with rigid, unblinking composure.]
 [EMOTIONAL PERFORMANCE: Observable heartbreak transforming into icy determination; steady, controlled breathing, subtle throat swallow, mouth set firmly into a hard line.]` +
 (dialogue ? `\n[DIALOGUE + DELIVERY: "${dialogue}" — delivered with quiet, lethal conviction; measured pacing at ~2.2 words/sec with natural consonant articulation.]` : "") +
-`\n[CONTINUITY LOCK: Retains ${wardrobe} and room coordinates from previous shot; eyeline locked toward doorway.]
-[PHYSICAL REALISM SAFEGUARDS: Natural cervical spine kinematics with realistic eye-lead latency; grounded foot contact with floor; zero sliding or floating.]`;
+`\n[CONTINUITY LOCK: Retains ${wardrobe} and room coordinates from previous shot; eyeline locked toward doorway; stage position locked to ${nextPos}.]
+[PHYSICAL REALISM SAFEGUARDS: Natural cervical spine kinematics with realistic eye-lead latency; grounded foot contact with floor; zero sliding or floating; strictly non-glowing organic pupils.]`;
 
   return `### 🎯 CONTINUITY & INHERITANCE
 Mode: ${mode}
@@ -2140,16 +2169,18 @@ async function runDriftDetect(){
   // Read spatial anchor graph and compass settings
   const roomName = document.getElementById('drift-room-name')?.value.trim() || '';
   const camCoord = document.getElementById('drift-cam-coord')?.value.trim() || '';
+  const charPos = document.getElementById('drift-char-pos')?.value.trim() || '';
   const anchorNorth = document.getElementById('drift-anchor-north')?.value.trim() || '';
   const anchorEast = document.getElementById('drift-anchor-east')?.value.trim() || '';
   const anchorSouth = document.getElementById('drift-anchor-south')?.value.trim() || '';
   const anchorWest = document.getElementById('drift-anchor-west')?.value.trim() || '';
 
   let spatialGraphSection = '';
-  if(roomName || camCoord || anchorNorth || anchorEast || anchorSouth || anchorWest){
+  if(roomName || camCoord || charPos || anchorNorth || anchorEast || anchorSouth || anchorWest){
     spatialGraphSection = `FIXED SPATIAL ANCHOR GRAPH & COMPASS COORDINATE SYSTEM:\n` +
       `- ROOM / SET: ${roomName || 'Established set'}\n` +
       `- CAMERA POSITION & HEADING: ${camCoord || 'Camera frame coordinates'}\n` +
+      `- CHARACTER STAGE POSITION & BLOCKING: ${charPos || 'Preserve established stage position and coordinates without jumping or swapping'}\n` +
       `- NORTH WALL [ANCHOR_01]: ${anchorNorth || 'Unspecified anchor'}\n` +
       `- EAST WALL [ANCHOR_02]: ${anchorEast || 'Unspecified anchor'}\n` +
       `- SOUTH WALL [ANCHOR_03]: ${anchorSouth || 'Unspecified anchor'}\n` +
@@ -2179,8 +2210,10 @@ The user NEEDS an EXHAUSTIVE, MICROSCOPIC CONTINUITY & PHYSICAL REALISM AUDIT RE
 3. Human Emotions & Observable Performance (Micro-expressions, eye-saccade leading head turns, breathing cadence, jaw clench, physical subtext)
 4. Room Geometry, 180° Rule & Spatial Anchors (Fixed compass directions, camera position/axis, screen-left vs screen-right eyeline lock)
 5. Human Kinematics & Real-World Physics (Mass, traversal speed ~3-4 ft/sec, posture transition preparation, grounded foot plant, zero skating/sliding/teleporting)
-6. Structured Continuity State Matrix (Canonical Bible vs Observed Baseline vs Next Shot)
-7. Anatomical vs Screen Coordinates & Mirror Lock (Anatomical Left/Right mapped to Screen position, mirror-flip prevention)
+6. OCULAR REALISM & ANTI-EYE-GLOW LOCK (Natural non-glowing biological cornea, matte iris, organic pupil dilation, strictly zero eye glow or synthetic pupil flare)
+7. CHARACTER STAGE POSITION & BLOCKING CONTINUITY (Lock screen-left/center/right coordinates, prevent unmotivated position jumping or stage swapping)
+8. Structured Continuity State Matrix (Canonical Bible vs Observed Baseline vs Next Shot)
+9. Anatomical vs Screen Coordinates & Mirror Lock (Anatomical Left/Right mapped to Screen position, mirror-flip prevention)
 
 THE NEW PROMPT IS AUTHORITATIVE. The previous prompt is temporary context, NOT blindly carried forward.
 
@@ -2213,7 +2246,17 @@ MANDATORY CONTINUITY & PHYSICAL REALISM RULES:
    - Posture transitions require kinetic preparation (sitting to standing, head turns preceded by eye saccades).
    - Realistic secondary motion: natural blinking (12-18 bpm, suppressed under intense concentration), weight shifts, breathing cadence.
 
-5. DIALOGUE & PERFORMANCE:
+5. OCULAR REALISM & ANTI-EYE-GLOW SAFEGUARD (CRITICAL):
+   - Characters' eyes must NEVER glow, flash, emit light, or have unnatural synthetic pupil shine / laser glare.
+   - Enforce natural biological corneal optics: matte sclera and iris, natural ambient specular catchlight (single subtle diffused key reflection only, matching the scene lighting), fixed biological pupil dilation consistent with ambient room lux.
+   - Strictly ban internal light emission, glowing irises, or flashlight reflection in pupils.
+
+6. CHARACTER STAGE POSITION & BLOCKING CONTINUITY (CRITICAL):
+   - Track character position across shots (Screen-Left, Screen-Center, Screen-Right, room coordinate anchors [X, Y], and depth planes).
+   - Characters must NOT randomly change positions, swap screen sides, or jump across the set between shots without explicit physical traversal steps and elapsed transit time (~3-4 ft/s).
+   - In CONTINUE mode, the character must start exactly where they were in the previous shot. If they move, detail the physical footsteps and travel time.
+
+7. DIALOGUE & PERFORMANCE:
    - Dialogue delivery: max ~2.5 words per second. If dialogue is too long for estimated duration, flag it and calculate minimum duration needed.
    - Listening performance: mouth closed, subtle micro-reactions (micro-nod, eye focus shift, swallow, tension in jaw).
    - Emotional progression: translate internal emotion into observable physical behavior.
@@ -2224,25 +2267,29 @@ Provide your output strictly in these sections:
 ### 🎯 CONTINUITY & INHERITANCE
 Mode: [CONTINUE | TRANSITION | RESET]
 - ✓ [Element inherited and carried forward]
+- ✓ Character stage position: [Screen-Left | Center | Screen-Right locked]
+- ✓ Ocular optics: [Biological non-glowing eyes locked]
 - ↻ [Element reset from previous shot]
 - → [Emotional progression or handoff]
 
 ### ⚠️ RISKS FLAGGED
-- ⚠ [Risk 1: Geometry, camera conflict, pacing, kinematics, dialogue, or physics defect]
+- ⚠ [Risk 1: Geometry, character position jump, eye glow risk, camera conflict, pacing, kinematics, dialogue, or physics defect]
 - ⚠ [Risk 2: ...]
 
 ### 🛠️ KYA KYA FIX KARNA HAI (ACTIONABLE AUDIT FIXES)
-- 🛠️ [Fix 1: Exact prompt change/addition needed]
-- 🛠️ [Fix 2: Exact prompt change/addition needed]
-- 🛠️ [Fix 3: Exact prompt change/addition needed]
+- 🛠️ [Fix 1: Anti-Eye-Glow Lock exact prompt directive]
+- 🛠️ [Fix 2: Character Stage Position coordinate pin]
+- 🛠️ [Fix 3: Exact pacing / kinematic / prompt change needed]
 
 ### 🔬 COMPREHENSIVE CONTINUITY & PHYSICAL REALISM AUDIT REPORT
 
 #### 1. 🛠️ Kya Kya Fix Karna Hai (Actionable Prompt Adjustments)
 Provide a clear, detailed bullet-point list of EXACT prompt adjustments needed for flawless video generation:
-- What to add (temporal timestamps, eye-lead saccade, floor contact anchors, breath cues)
+- Anti-Eye-Glow Lock (prompt biological non-emissive cornea, matte iris, ambient catchlight only)
+- Character Stage Position Lock (pin subject to Screen-Left / Center / Screen-Right coordinates; prevent jumping)
+- Temporal timestamps & chronological beats breakdown
+- Biomechanical eye-lead saccade and floor contact anchors
 - What to remove (contradictory camera angles, impossible instant traversal, ambiguous left/right terms)
-- What to rewrite for Seedance/Kling/Runway compliance
 
 #### 2. ⏱️ Consistent Pacing & Temporal Timing Analysis
 - Temporal Beat Breakdown: Divide shot duration into chronological action beats (e.g., 0.0–1.2s initial, 1.2–2.8s primary action, 2.8–5.0s hold/settle).
@@ -2250,34 +2297,41 @@ Provide a clear, detailed bullet-point list of EXACT prompt adjustments needed f
 - Human Temporal Rhythm: Natural unhurried tempo, pause before reaction, breath support before speech.
 
 #### 3. 🎭 Human Emotion & Observable Acting Performance
+- Ocular Optics & Anti-Glow Lock: Biological corneal curvature with natural light absorption; matte iris pigmentation consistent with Character Bible; zero synthetic pupil glow, laser glare, or flashlight reflection; organic pupil dilation responding only to ambient room lumens.
 - Micro-expressions & Ocular Dynamics: Eye saccade leads head rotation by ~100ms. Blinking cadence (12–18 bpm, suppressed under intense concentration).
 - Somatic & Physiological Cues: Diaphragmatic breathing (subtle chest/shoulder rise), throat swallow, tension in jaw/neck muscles.
 - Subtext Manifestation: Translate internal feelings into visible external behavioral cues rather than generic adjectives.
-- Listening Performance (if applicable): Closed mouth, micro-nod, subtle shift in eye focal depth.
 
 #### 4. 🧭 Room Geometry, 180° Rule & Spatial Anchors
+- Character Stage Blocking & Position Lock: Character coordinates firmly locked to established stage placement (Screen-Left / Center / Screen-Right); relative two-shot blocking maintains position integrity without coordinate swapping.
 - Compass Wall Anchors: Permanent fixed cardinal locations (North, East, South, West wall features).
 - Camera Position, Heading & Line of Action: Verify 180-degree rule integrity to prevent reverse-angle disorientation.
 - Eyelines & Screen Direction: Screen-left vs screen-right matching. Eyeline locked to target object/character.
-- Depth Layering: Foreground, midground, and background element positioning.
 
 #### 5. 🚶 Human Kinematics & Real-World Physics
-- Mass, Momentum & Traversal Speed: Human walking speed ~3–4 ft/second. Characters cannot instantly close distance without physical traversal steps and elapsed time.
+- Mass, Traversal Speed & Locomotion: Human walking speed ~3–4 ft/second. Characters cannot instantly close distance or jump coordinates without physical traversal steps and elapsed time.
 - Kinetic Preparation & Posture Transitions: Weight shifting before standing or turning; arm retraction obeying gravitational momentum.
 - Ground Contact & Anti-Skate Safeguards: Firm floor contact with locked foot plant; zero sliding, skating, or unnatural floating.
 - Fabric & Secondary Physics: Natural drape, clothing settling with gravity, hair inertia.
 
 #### 6. 📊 Structured Continuity State Matrix
 | Element / Character / Prop | Intended Canonical State (Bible) | Observed Baseline State (Prev Shot) | Proposed Next Shot State | Status & Constraint Audit |
+| Character Identity | ... | ... | ... | ✓ INHERIT & LOCKED |
+| Wardrobe | ... | ... | ... | ✓ INHERIT |
+| Character Stage Position | ... | ... | ... | ✓ POSITION LOCKED (Zero jumping) |
+| Ocular Optics / Eye Glow | Biological / Matte | Ambient catchlight | Non-glowing cornea | ✓ ANTI-GLOW LOCKED |
+| Room Coordinates | ... | ... | ... | ✓ GEOMETRY PRESERVED |
+| Eyeline Direction | ... | ... | ... | ✓ PROGRESSION TRACKED |
 
 #### 7. 🔄 Anatomical Coordinates vs Screen Coordinates & Mirror Safeguard
 - Asymmetric Features (scars, tattoos, watches, hair partings):
   - Character Anatomical Side: [LEFT/RIGHT]
   - Projected Screen Position based on camera heading: [SCREEN-LEFT / SCREEN-RIGHT]
+  - Character Stage Position: [Screen-Left / Center / Screen-Right]
 - Anti-Mirror Instruction: Explicit directive preventing synthetic AI mirror-flipping.
 
 ### ✨ OPTIONAL REFERENCE PROMPT (Condensed Formulation)
-[Provide a compact reference prompt consolidating the audit fixes above, for optional copy or direct export if desired.]`;
+[Provide a compact reference prompt consolidating the audit fixes above, including [OCULAR REALISM: ...] and [STAGE BLOCKING: ...] tags, for optional copy or direct export if desired.]`;
 
   try {
     const response = await gemini(

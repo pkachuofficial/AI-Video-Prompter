@@ -68,14 +68,32 @@ def analyze_spatial_continuity(
         if "window" in p_low:
             anchor_desc.append("window wall preserved")
 
+        # Character Stage Position Continuity
+        pos_regex = r"\b(screen-left|screen-right|screen-center|center frame|stage left|stage right)\b"
+        prev_pos_match = re.search(pos_regex, p_low)
+        new_pos_match = re.search(pos_regex, n_low)
+        if prev_pos_match and new_pos_match and prev_pos_match.group(1) != new_pos_match.group(1):
+            has_movement = any(w in n_low for w in ["walk", "step", "stride", "cross", "move", "run"])
+            if not has_movement:
+                risks.append(RiskItem(
+                    category="spatial_position",
+                    severity="WARNING",
+                    description=f"Character position jump: subject was {prev_pos_match.group(1)} in previous shot but is {new_pos_match.group(1)} without movement steps.",
+                    suggestion="Add physical traversal footsteps or preserve established stage coordinates."
+                ))
+
         if anchor_desc:
-            geometry_directive = f"Preserve established room geometry: {'; '.join(anchor_desc)}. Do not mirror or rotate the layout."
+            geometry_directive = f"Preserve established room geometry: {'; '.join(anchor_desc)}. Do not mirror or rotate the layout. Character stage position locked to established coordinates; zero position jumping."
         else:
-            geometry_directive = "Preserve established room geometry and cardinal spatial orientation; do not mirror or invert the layout."
+            geometry_directive = "Preserve established room geometry and cardinal spatial orientation; do not mirror or invert the layout. Character stage position locked to established coordinates; zero position jumping."
 
         corrections.append(CorrectionItem(
             category="geometry",
-            description="Established room geometry and wall anchors inherited."
+            description="Established room geometry, wall anchors, and character stage coordinates inherited."
+        ))
+        corrections.append(CorrectionItem(
+            category="spatial_position",
+            description="Character stage position locked: zero instantaneous position jumping or stage swapping."
         ))
 
     elif mode == ContinuityMode.TRANSITION:
